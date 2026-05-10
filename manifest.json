@@ -1,0 +1,16 @@
+{
+  "name": "JLPT N4 日語學習",
+  "short_name": "N4日語",
+  "description": "JLPT N4 單字、假名、文法、聽力練習",
+  "start_url": "/jlpt-n4/",
+  "scope": "/jlpt-n4/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "lang": "zh-TW",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

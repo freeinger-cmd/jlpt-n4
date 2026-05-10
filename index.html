@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="theme-color" content="#1a1a2e"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="N4日語"/>
+  <title>JLPT N4 日語學習</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="icon" href="icons/icon-192.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="src/style.css"/>
+</head>
+<body>
+<div id="app">
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="setSection('vocab')" id="n-vocab"><span class="nav-icon">📇</span><span class="nav-label">單字</span></button>
+    <button class="nav-item" onclick="setSection('kana')" id="n-kana"><span class="nav-icon">🔤</span><span class="nav-label">假名</span></button>
+    <button class="nav-item" onclick="setSection('listen')" id="n-listen"><span class="nav-icon">🔊</span><span class="nav-label">聽力</span></button>
+    <button class="nav-item" onclick="setSection('grammar')" id="n-grammar"><span class="nav-icon">✍️</span><span class="nav-label">文法</span></button>
+    <button class="nav-item" onclick="setSection('review')" id="n-review"><span class="nav-icon">⭐</span><span class="nav-label">複習</span></button>
+  </nav>
+  <main class="main-content">
+
+    <!-- 單字 -->
+    <section id="s-vocab" class="section active">
+      <div class="section-header">
+        <h1 class="section-title">單字練習</h1>
+        <div class="word-count" id="vocab-count">533 個</div>
+      </div>
+      <div class="filter-scroll" id="ftags"></div>
+      <div class="mode-switch">
+        <button class="mode-btn active" onclick="setVMode('flash')" id="vm-flash">抽認卡</button>
+        <button class="mode-btn" onclick="setVMode('quiz')" id="vm-quiz">測驗</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-val blue" id="sv-t">0</span><span class="stat-label">進度</span></div>
+        <div class="stat-item"><span class="stat-val green" id="sv-k">0</span><span class="stat-label">記住了</span></div>
+        <div class="stat-item"><span class="stat-val red" id="sv-f">0</span><span class="stat-label">需複習</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="vp"></div></div>
+      <div id="vm-flash-div">
+        <div class="card-nav">
+          <button class="nav-arrow" onclick="vPrev()" id="v-prev">← 上一張</button>
+          <div class="card-counter" id="vcnt"></div>
+          <button class="nav-arrow" onclick="flipCard()">翻面 →</button>
+        </div>
+        <div class="card-scene" onclick="flipCard()">
+          <div class="card-body" id="ci">
+            <div class="card-face front" id="cfront"></div>
+            <div class="card-face back" id="cback"></div>
+          </div>
+        </div>
+        <p class="tap-hint" id="vhint">點擊卡片翻面查看意思</p>
+        <div class="action-row" id="vact" style="display:none">
+          <button class="action-btn nope" onclick="vAns(false)">😅 不記得</button>
+          <button class="action-btn know" onclick="vAns(true)">✅ 記住了！</button>
+        </div>
+        <div class="action-row" id="vflip">
+          <button class="action-btn speak" onclick="speakCurrent()">🔊 朗讀</button>
+          <button class="action-btn flip" onclick="flipCard()">翻面查看</button>
+        </div>
+      </div>
+      <div id="vm-quiz-div" style="display:none">
+        <div class="quiz-card" id="qbox"></div>
+      </div>
+    </section>
+
+    <!-- 假名 -->
+    <section id="s-kana" class="section">
+      <div class="section-header">
+        <h1 class="section-title">🔤 假名模式</h1>
+        <div class="word-count">N4考試題型</div>
+      </div>
+      <div class="kana-info">看平假名・片假名，答出漢字和意思！</div>
+      <div class="mode-switch">
+        <button class="mode-btn active" onclick="setKMode('flash')" id="km-flash">抽認卡</button>
+        <button class="mode-btn" onclick="setKMode('kanji')" id="km-kanji">猜漢字</button>
+        <button class="mode-btn" onclick="setKMode('meaning')" id="km-meaning">猜意思</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-val blue" id="sk-t">0</span><span class="stat-label">進度</span></div>
+        <div class="stat-item"><span class="stat-val green" id="sk-k">0</span><span class="stat-label">答對</span></div>
+        <div class="stat-item"><span class="stat-val red" id="sk-f">0</span><span class="stat-label">答錯</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="kp"></div></div>
+      <div id="km-flash-div">
+        <div class="card-nav">
+          <button class="nav-arrow" onclick="kPrev()">← 上一張</button>
+          <div class="card-counter" id="kcnt"></div>
+          <button class="nav-arrow" onclick="flipKana()">翻面 →</button>
+        </div>
+        <div class="card-scene" onclick="flipKana()">
+          <div class="card-body" id="kci">
+            <div class="card-face front" id="kfront"></div>
+            <div class="card-face back" id="kback"></div>
+          </div>
+        </div>
+        <p class="tap-hint" id="khint">看平假名，翻面確認漢字和意思</p>
+        <div class="action-row" id="kact" style="display:none">
+          <button class="action-btn nope" onclick="kAns(false)">😅 答錯了</button>
+          <button class="action-btn know" onclick="kAns(true)">✅ 答對了！</button>
+        </div>
+        <div class="action-row" id="kflip">
+          <button class="action-btn speak" onclick="speakKana()">🔊 聽發音</button>
+          <button class="action-btn flip" onclick="flipKana()">翻面確認</button>
+        </div>
+      </div>
+      <div id="km-kanji-div" style="display:none"><div class="quiz-card" id="kquiz-kanji"></div></div>
+      <div id="km-meaning-div" style="display:none"><div class="quiz-card" id="kquiz-meaning"></div></div>
+    </section>
+
+    <!-- 聽力 -->
+    <section id="s-listen" class="section">
+      <div class="section-header">
+        <h1 class="section-title">聽力練習</h1>
+        <div class="word-count">聽音辨字</div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-val blue" id="sl-t">0</span><span class="stat-label">題數</span></div>
+        <div class="stat-item"><span class="stat-val green" id="sl-k">0</span><span class="stat-label">答對</span></div>
+        <div class="stat-item"><span class="stat-val red" id="sl-f">0</span><span class="stat-label">答錯</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="lp"></div></div>
+      <div class="listen-card" id="lcard">
+        <div class="listen-num" id="lnum"></div>
+        <div class="listen-icon">🎧</div>
+        <p class="listen-hint">按下播放，聽發音猜單字</p>
+        <button class="play-btn" onclick="playListen()">▶ 播放</button>
+        <div class="listen-reveal" id="lreveal" style="display:none"></div>
+      </div>
+      <div class="action-row" id="lact" style="display:none">
+        <button class="action-btn nope" onclick="lPrev()">← 上一題</button>
+        <button class="action-btn nope" onclick="lAns(false)">❌ 答錯了</button>
+        <button class="action-btn know" onclick="lAns(true)">✅ 答對了！</button>
+      </div>
+      <div class="action-row" id="lplay">
+        <button class="action-btn speak" onclick="playListen()">🔊 再聽一次</button>
+        <button class="action-btn flip" onclick="showListen()">顯示答案</button>
+      </div>
+    </section>
+
+    <!-- 文法 -->
+    <section id="s-grammar" class="section">
+      <div class="section-header">
+        <h1 class="section-title">文法練習</h1>
+        <div class="word-count">動詞變化</div>
+      </div>
+      <div class="g-type-scroll" id="gtabs"></div>
+      <div class="rule-card" id="grule"></div>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-val blue" id="sg-t">0</span><span class="stat-label">進度</span></div>
+        <div class="stat-item"><span class="stat-val green" id="sg-k">0</span><span class="stat-label">答對</span></div>
+        <div class="stat-item"><span class="stat-val red" id="sg-f">0</span><span class="stat-label">答錯</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="gp"></div></div>
+      <div class="grammar-card" id="gbox"></div>
+    </section>
+
+    <!-- 複習 -->
+    <section id="s-review" class="section">
+      <div class="section-header">
+        <h1 class="section-title">複習清單</h1>
+        <button class="reset-btn" onclick="resetAll()">重置進度</button>
+      </div>
+      <div class="mode-switch">
+        <button class="mode-btn active" onclick="setRTab('vocab')" id="rt-vocab">單字</button>
+        <button class="mode-btn" onclick="setRTab('kana')" id="rt-kana">假名</button>
+        <button class="mode-btn" onclick="setRTab('grammar')" id="rt-grammar">文法</button>
+      </div>
+      <div id="rv-vocab"></div>
+      <div id="rv-kana" style="display:none"></div>
+      <div id="rv-grammar" style="display:none"></div>
+    </section>
+
+  </main>
+</div>
+<script src="src/data.js"></script>
+<script src="src/app.js"></script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+</body>
+</html>

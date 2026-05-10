@@ -11,8 +11,6 @@ function speak(text){
   if(jp)u.voice=jp;
   window.speechSynthesis.speak(u);
 }
-
-// ===== STATE =====
 let section='vocab';
 let activeTag='all',vMode='flash';
 let pool=[...VOCAB],vi=0,vFlipped=false;
@@ -27,8 +25,6 @@ let lKnown=new Set(),lForgot=new Set();
 let gType='te',gi=0,gAnswered=false;
 let gPool=[],gKnown=new Set(),gForgot=new Set();
 let rTab='vocab';
-
-// ===== STORAGE =====
 function save(){
   try{
     localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));
@@ -62,8 +58,6 @@ function resetAll(){
   updateVStats();updateKStats();updateGStats();updateLStats();
   renderCard();renderKanaCard();renderReview();
 }
-
-// ===== SECTION =====
 function setSection(s){
   section=s;
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
@@ -75,8 +69,6 @@ function setSection(s){
   if(s==='review')renderReview();
   if(s==='kana'){buildKPool();renderKanaCard();}
 }
-
-// ===== 單字 =====
 function buildPool(){
   pool=activeTag==='all'?[...VOCAB]:VOCAB.filter(w=>w.tag===activeTag);
   vi=0;vFlipped=false;vHistory=[];
@@ -106,7 +98,6 @@ function setVMode(m){
   if(m==='flash'){vi=0;vFlipped=false;vKnown.clear();vForgot.clear();vHistory=[];updateVStats();renderCard();}
   else{qPool=sh([...pool]);qi=0;qAnswered=false;renderQCard();}
 }
-
 function renderCard(){
   const prevBtn=$('v-prev');
   if(prevBtn)prevBtn.style.opacity=vi===0?'0.3':'1';
@@ -120,7 +111,7 @@ function renderCard(){
   $('ci').classList.remove('flipped');
   $('vact').style.display='none';$('vflip').style.display='flex';$('vhint').style.display='block';
   $('vcnt').textContent=`${vi+1} / ${pool.length}`;
-  $('cfront').innerHTML=`${tagH(w.tag)}<div class="c-jp">${w.jp}</div><div class="c-rd">${w.rd}</div><div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:0.5rem">點擊翻面</div>`;
+  $('cfront').innerHTML=`${tagH(w.tag)}<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div><div class="c-jp" style="font-size:38px;letter-spacing:4px">${w.rd}</div><div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
   $('cback').innerHTML=`${tagH(w.tag)}<div class="c-jp" style="font-size:26px">${w.jp}</div><div class="c-rd">${w.rd}</div><div class="c-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div><div class="ex-text">例：${w.ex}</div>`;
 }
 function flipCard(){
@@ -135,9 +126,7 @@ function vAns(ok){
 function vPrev(){
   if(vi===0)return;
   const last=vHistory.pop();
-  if(last){
-    if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);
-  }
+  if(last){if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);}
   vi--;vFlipped=false;updateVStats();renderCard();
 }
 function updateVStats(){
@@ -146,15 +135,13 @@ function updateVStats(){
   $('vp').style.width=Math.round((t/Math.max(pool.length,1))*100)+'%';
 }
 function speakCurrent(){if(vi<pool.length)speak(pool[vi].rd);}
-
-// 單字測驗
 function renderQCard(){
   if(qi>=qPool.length){$('qbox').innerHTML=`<div class="empty-state">🎊 完成！答對 ${vKnown.size}/${qPool.length}</div><button class="next-btn" onclick="qPool=sh([...pool]);qi=0;vKnown.clear();vForgot.clear();renderQCard()">再做一次</button>`;return;}
   const w=qPool[qi];
   const others=pool.filter(v=>v.jp!==w.jp);sh(others);
   const opts=sh([w,...others.slice(0,3)]);
   qAnswered=false;
-  $('qbox').innerHTML=`<div class="q-word">${w.jp}</div><div class="q-sub">${w.rd} の意思は？</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkVQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}')">${o.mn}</button>`).join('')}</div><div id="qr"></div><button class="next-btn" id="qn" style="display:none" onclick="qi++;renderQCard()">下一題 →</button>`;
+  $('qbox').innerHTML=`<div class="q-word">${w.jp}</div><div class="q-sub">${w.rd} の意思は？</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkVQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}'">${o.mn}</button>`).join('')}</div><div id="qr"></div><button class="next-btn" id="qn" style="display:none" onclick="qi++;renderQCard()">下一題 →</button>`;
 }
 function checkVQ(el,ch,co){
   if(qAnswered)return;qAnswered=true;
@@ -164,8 +151,6 @@ function checkVQ(el,ch,co){
   else{el.classList.add('ng');vForgot.add(qi);document.querySelectorAll('#qbox .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('qr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}<br>${w.mem}</div>`;}
   $('qn').style.display='block';updateVStats();save();
 }
-
-// ===== 假名模式 =====
 function buildKPool(){kPool=sh([...VOCAB]);ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();}
 function setKMode(m){
   kMode=m;
@@ -212,15 +197,13 @@ function updateKStats(){
   $('kp').style.width=Math.round((t/Math.max(kPool.length,1))*100)+'%';
 }
 function speakKana(){if(ki<kPool.length)speak(kPool[ki].rd);}
-
-// 猜漢字
 function renderKanjiQuiz(){
   if(kki>=kkPool.length){$('kquiz-kanji').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kkPool.length}</div><button class="next-btn" onclick="kkPool=sh([...VOCAB]);kki=0;kKnown.clear();kForgot.clear();renderKanjiQuiz()">再做一次</button>`;return;}
   const w=kkPool[kki];
   const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);
   const opts=sh([w,...others.slice(0,3)]);
   kkAnswered=false;
-  $('kquiz-kanji').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名對應哪個漢字？</div><div class="q-word" style="font-size:34px;letter-spacing:4px">${w.rd}</div><div class="q-sub">${w.mn}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKKQ(this,'${o.jp.replace(/'/g,"\\'")}','${w.jp.replace(/'/g,"\\'")}')">${o.jp}</button>`).join('')}</div><div id="kkr"></div><button class="next-btn" id="kkn" style="display:none" onclick="kki++;renderKanjiQuiz()">下一題 →</button>`;
+  $('kquiz-kanji').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名對應哪個漢字？</div><div class="q-word" style="font-size:34px;letter-spacing:4px">${w.rd}</div><div class="q-sub">${w.mn}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKKQ(this,'${o.jp.replace(/'/g,"\\'")}','${w.jp.replace(/'/g,"\\'")}'">${o.jp}</button>`).join('')}</div><div id="kkr"></div><button class="next-btn" id="kkn" style="display:none" onclick="kki++;renderKanjiQuiz()">下一題 →</button>`;
 }
 function checkKKQ(el,ch,co){
   if(kkAnswered)return;kkAnswered=true;
@@ -230,15 +213,13 @@ function checkKKQ(el,ch,co){
   else{el.classList.add('ng');kForgot.add(kki);document.querySelectorAll('#kquiz-kanji .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kkr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}（${w.mn}）<br>${w.mem}</div>`;}
   $('kkn').style.display='block';updateKStats();save();
 }
-
-// 猜意思
 function renderMeaningQuiz(){
   if(kmi>=kmPool.length){$('kquiz-meaning').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kmPool.length}</div><button class="next-btn" onclick="kmPool=sh([...VOCAB]);kmi=0;kKnown.clear();kForgot.clear();renderMeaningQuiz()">再做一次</button>`;return;}
   const w=kmPool[kmi];
   const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);
   const opts=sh([w,...others.slice(0,3)]);
   kmAnswered=false;
-  $('kquiz-meaning').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名是什麼意思？</div><div class="q-word" style="font-size:34px;letter-spacing:4px">${w.rd}</div><div class="q-sub" style="color:rgba(255,255,255,0.4)">${w.jp}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKMQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}')">${o.mn}</button>`).join('')}</div><div id="kmr"></div><button class="next-btn" id="kmn" style="display:none" onclick="kmi++;renderMeaningQuiz()">下一題 →</button>`;
+  $('kquiz-meaning').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名是什麼意思？</div><div class="q-word" style="font-size:34px;letter-spacing:4px">${w.rd}</div><div class="q-sub" style="color:rgba(255,255,255,0.4)">${w.jp}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKMQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}'">${o.mn}</button>`).join('')}</div><div id="kmr"></div><button class="next-btn" id="kmn" style="display:none" onclick="kmi++;renderMeaningQuiz()">下一題 →</button>`;
 }
 function checkKMQ(el,ch,co){
   if(kmAnswered)return;kmAnswered=true;
@@ -248,8 +229,6 @@ function checkKMQ(el,ch,co){
   else{el.classList.add('ng');kForgot.add(kmi);document.querySelectorAll('#kquiz-meaning .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kmr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}<br>${w.mem}</div>`;}
   $('kmn').style.display='block';updateKStats();save();
 }
-
-// ===== 聽力 =====
 function renderListen(){
   if(li>=lPool.length){
     $('lcard').innerHTML=`<div class="listen-num">完成！</div><div class="listen-icon">🎊</div><p class="listen-hint">答對 ${lKnown.size}/${lPool.length}</p><button class="play-btn" onclick="li=0;lKnown.clear();lForgot.clear();lHistory=[];lPool=sh([...VOCAB]);renderListen()">再來一次</button>`;
@@ -285,8 +264,6 @@ function updateLStats(){
   $('sl-t').textContent=t;$('sl-k').textContent=lKnown.size;$('sl-f').textContent=lForgot.size;
   $('lp').style.width=Math.round((t/Math.max(lPool.length,1))*100)+'%';
 }
-
-// ===== 文法 =====
 function buildGPool(){gPool=sh(GRAMMAR_Q.filter(q=>q.type===gType));gi=0;gKnown.clear();gForgot.clear();updateGStats();}
 function renderGTabs(){
   $('gtabs').innerHTML=Object.entries(GRAMMAR_TYPES).map(([k,v])=>`<button class="g-tab ${gType===k?'active':''}" onclick="setGType('${k}')">${v.name}</button>`).join('');
@@ -315,8 +292,6 @@ function updateGStats(){
   $('sg-t').textContent=t;$('sg-k').textContent=gKnown.size;$('sg-f').textContent=gForgot.size;
   $('gp').style.width=Math.round((t/Math.max(gPool.length,1))*100)+'%';
 }
-
-// ===== 複習 =====
 function setRTab(t){
   rTab=t;
   ['vocab','kana','grammar'].forEach(x=>{
@@ -332,8 +307,6 @@ function renderReview(){
   const glist=[...gForgot].map(i=>gPool[i]).filter(Boolean);
   $('rv-grammar').innerHTML=glist.length===0?`<div class="empty-state">🎉 沒有需要複習的文法！</div>`:glist.map(q=>`<div class="rev-item"><div class="rev-row"><span class="rev-jp" style="font-size:20px">${q.base}</span><span style="font-size:12px;color:rgba(255,255,255,0.35)">${GRAMMAR_TYPES[q.type]?.name}</span></div><div class="rev-ans">${q.base} → <strong>${q.ans}</strong></div></div>`).join('');
 }
-
-// ===== PWA =====
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredPrompt=e;
@@ -347,8 +320,6 @@ function installApp(){
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.querySelector('.install-banner')?.remove();});
 }
-
-// ===== INIT =====
 load();
 renderFTags();
 buildPool();

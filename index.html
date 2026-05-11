@@ -1,185 +1,1075 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-  <meta name="theme-color" content="#1a1a2e"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="N4日語"/>
-  <title>JLPT N4 日語學習</title>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-  <link rel="icon" href="icons/icon-192.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="src/style.css"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="N4單字">
+<meta name="theme-color" content="#0f0f14">
+<title>N4單字學習卡</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Sans+TC:wght@300;400;700&display=swap');
+
+  :root {
+    --bg: #0f0f14;
+    --card-bg: #1a1a24;
+    --card-border: #2e2e45;
+    --accent: #7c6af7;
+    --accent2: #f76a6a;
+    --accent3: #6af7b8;
+    --text: #e8e8f0;
+    --text-dim: #888899;
+    --star: #f7c46a;
+    --noun: #6aaff7;
+    --verb: #6af7b8;
+    --adj: #f7a06a;
+    --adv: #f76af7;
+    --expr: #f7e46a;
+    --other: #aaa;
+    --font-size: 1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 6px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .topbar-title { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+  .topbar-count { font-size: 0.78rem; color: var(--text-dim); }
+  .topbar-controls { display: flex; gap: 6px; }
+  .ctrl-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 4px 9px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+  .ctrl-btn:hover, .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .progress-wrap { width: 100%; max-width: 600px; padding: 5px 16px 0; background: var(--bg); }
+  .progress-bar-bg { width: 100%; height: 3px; background: var(--card-border); border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 4px; transition: width 0.4s; }
+
+  .filter-tabs {
+    width: 100%; max-width: 600px;
+    display: flex; gap: 5px;
+    padding: 8px 16px 3px;
+    overflow-x: auto; scrollbar-width: none;
+    background: var(--bg);
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .ftab {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    color: var(--text-dim); border-radius: 20px;
+    padding: 3px 10px; font-size: 0.7rem;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .ftab.active { color: #fff; border-color: transparent; }
+  .ftab[data-f="all"].active  { background: var(--accent); }
+  .ftab[data-f="noun"].active { background: var(--noun); color: #000; }
+  .ftab[data-f="verb"].active { background: var(--verb); color: #000; }
+  .ftab[data-f="adj"].active  { background: var(--adj); color: #000; }
+  .ftab[data-f="adv"].active  { background: var(--adv); }
+  .ftab[data-f="expr"].active { background: var(--expr); color: #000; }
+  .ftab[data-f="star"].active { background: var(--star); color: #000; }
+
+  .stats-bar {
+    width: 100%; max-width: 600px;
+    padding: 5px 16px 6px;
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .stat-chip {
+    font-size: 0.7rem; color: var(--text-dim);
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 2px 9px;
+  }
+  .stat-chip span { font-weight: 700; color: var(--text); }
+
+  .card-area { width: 100%; max-width: 600px; flex: 1; padding: 10px 16px 0; }
+
+  .card-container {
+    width: 100%; position: relative;
+    height: 300px;
+    perspective: 1000px;
+    touch-action: pan-y;
+  }
+
+  .card {
+    width: 100%; height: 100%;
+    position: absolute;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+    cursor: pointer; border-radius: 18px;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden; border-radius: 18px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 6px 32px rgba(0,0,0,0.5);
+  }
+  .card-back { transform: rotateY(180deg); }
+
+  .card-face::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 18px 18px 0 0;
+  }
+  .card[data-pos="noun"] .card-face::before { background: var(--noun); }
+  .card[data-pos="verb"] .card-face::before { background: var(--verb); }
+  .card[data-pos="adj"]  .card-face::before { background: var(--adj); }
+  .card[data-pos="adv"]  .card-face::before { background: var(--adv); }
+  .card[data-pos="expr"] .card-face::before { background: var(--expr); }
+  .card[data-pos="other"].card-face::before { background: var(--other); }
+
+  .card-num { position: absolute; top: 12px; left: 16px; font-size: 0.7rem; color: var(--text-dim); }
+  .star-btn {
+    position: absolute; top: 8px; right: 12px;
+    font-size: 1.2rem; cursor: pointer;
+    background: none; border: none; padding: 4px; line-height: 1;
+    transition: transform 0.2s;
+  }
+  .star-btn:hover { transform: scale(1.2); }
+
+  .pos-badge {
+    position: absolute; bottom: 12px; left: 16px;
+    font-size: 0.65rem; padding: 2px 7px;
+    border-radius: 10px; font-weight: 700; letter-spacing: 1px;
+  }
+  .pos-noun { background: rgba(106,175,247,0.2); color: var(--noun); }
+  .pos-verb { background: rgba(106,247,184,0.2); color: var(--verb); }
+  .pos-adj  { background: rgba(247,160,106,0.2); color: var(--adj); }
+  .pos-adv  { background: rgba(247,106,247,0.2); color: var(--adv); }
+  .pos-expr { background: rgba(247,228,106,0.2); color: var(--expr); }
+  .pos-other{ background: rgba(170,170,170,0.15); color: var(--other); }
+
+  .miss-counter { position: absolute; bottom: 12px; right: 12px; font-size: 0.65rem; color: var(--accent2); font-weight: 700; }
+
+  /* ── 正面：假名大字 ── */
+  .card-kana {
+    font-size: calc(2rem * var(--font-size));
+    font-weight: 900; color: var(--text);
+    text-align: center; letter-spacing: 3px; line-height: 1.3;
+  }
+  .card-emoji { font-size: 1.6rem; margin-top: 8px; }
+
+  /* ── 背面：漢字＋假名＋中文＋例句 ── */
+  .card-kanji {
+    font-size: calc(2rem * var(--font-size));
+    font-weight: 900; color: var(--text);
+    text-align: center; line-height: 1.2; margin-bottom: 2px;
+  }
+  .card-kana-back {
+    font-size: calc(0.8rem * var(--font-size));
+    color: var(--text-dim); text-align: center;
+    letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .card-meaning {
+    font-size: calc(1.4rem * var(--font-size));
+    font-weight: 700; color: var(--accent3);
+    text-align: center; margin-bottom: 8px;
+  }
+  .card-example {
+    font-size: calc(0.75rem * var(--font-size));
+    color: var(--text-dim); text-align: center;
+    line-height: 1.6; max-width: 300px;
+  }
+  .card-example .jp { color: var(--text); font-size: calc(0.8rem * var(--font-size)); }
+
+  .swipe-hint { text-align: center; font-size: 0.68rem; color: var(--text-dim); padding: 6px 0 2px; letter-spacing: 1px; }
+
+  .bottom-nav {
+    width: 100%; max-width: 600px;
+    display: flex; gap: 8px; padding: 10px 16px;
+    align-items: center; justify-content: center;
+    position: sticky; bottom: 0;
+    background: var(--bg); border-top: 1px solid var(--card-border);
+  }
+  .nav-btn {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    color: var(--text); border-radius: 12px;
+    padding: 10px 16px; font-size: 1rem;
+    cursor: pointer; transition: all 0.15s;
+    flex: 1; font-family: inherit; max-width: 90px;
+  }
+  .nav-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .nav-btn.know { background: rgba(106,247,184,0.15); border-color: var(--verb); color: var(--verb); }
+  .nav-btn.know:hover { background: var(--verb); color: #000; }
+  .nav-btn.miss { background: rgba(247,106,106,0.15); border-color: var(--accent2); color: var(--accent2); }
+  .nav-btn.miss:hover { background: var(--accent2); color: #fff; }
+  .nav-center { text-align: center; flex: 1.2; }
+  .nav-idx { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  .nav-total { font-size: 0.7rem; color: var(--text-dim); }
+
+  @keyframes slideInRight { from { opacity:0; transform: translateX(70px); } to { opacity:1; transform: translateX(0); } }
+  @keyframes slideInLeft  { from { opacity:0; transform: translateX(-70px); } to { opacity:1; transform: translateX(0); } }
+  .slide-in-right .card-face { animation: slideInRight 0.28s ease; }
+  .slide-in-left .card-face  { animation: slideInLeft 0.28s ease; }
+
+  body.font-lg { --font-size: 1.2; }
+  body.font-sm { --font-size: 0.85; }
+</style>
 </head>
 <body>
-<div id="app">
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="setSection('vocab')" id="n-vocab"><span class="nav-icon">📇</span><span class="nav-label">單字</span></button>
-    <button class="nav-item" onclick="setSection('kana')" id="n-kana"><span class="nav-icon">🔤</span><span class="nav-label">假名</span></button>
-    <button class="nav-item" onclick="setSection('listen')" id="n-listen"><span class="nav-icon">🔊</span><span class="nav-label">聽力</span></button>
-    <button class="nav-item" onclick="setSection('grammar')" id="n-grammar"><span class="nav-icon">✍️</span><span class="nav-label">文法</span></button>
-    <button class="nav-item" onclick="setSection('review')" id="n-review"><span class="nav-icon">⭐</span><span class="nav-label">複習</span></button>
-  </nav>
-  <main class="main-content">
 
-    <!-- 單字 -->
-    <section id="s-vocab" class="section active">
-      <div class="section-header">
-        <h1 class="section-title">單字練習</h1>
-        <div class="word-count" id="vocab-count">533 個</div>
-      </div>
-      <div class="filter-scroll" id="ftags"></div>
-      <div class="mode-switch">
-        <button class="mode-btn active" onclick="setVMode('flash')" id="vm-flash">抽認卡</button>
-        <button class="mode-btn" onclick="setVMode('quiz')" id="vm-quiz">測驗</button>
-      </div>
-      <div class="stats-bar">
-        <div class="stat-item"><span class="stat-val blue" id="sv-t">0</span><span class="stat-label">進度</span></div>
-        <div class="stat-item"><span class="stat-val green" id="sv-k">0</span><span class="stat-label">記住了</span></div>
-        <div class="stat-item"><span class="stat-val red" id="sv-f">0</span><span class="stat-label">需複習</span></div>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="vp"></div></div>
-      <div id="vm-flash-div">
-        <div class="card-nav">
-          <button class="nav-arrow" onclick="vPrev()" id="v-prev">← 上一張</button>
-          <div class="card-counter" id="vcnt"></div>
-          <button class="nav-arrow" onclick="flipCard()">翻面 →</button>
-        </div>
-        <div class="card-scene" onclick="flipCard()">
-          <div class="card-body" id="ci">
-            <div class="card-face front" id="cfront"></div>
-            <div class="card-face back" id="cback"></div>
-          </div>
-        </div>
-        <p class="tap-hint" id="vhint">點擊卡片翻面查看意思</p>
-        <div class="action-row" id="vact" style="display:none">
-          <button class="action-btn nope" onclick="vAns(false)">😅 不記得</button>
-          <button class="action-btn know" onclick="vAns(true)">✅ 記住了！</button>
-        </div>
-        <div class="action-row" id="vflip">
-          <button class="action-btn speak" onclick="speakCurrent()">🔊 朗讀</button>
-          <button class="action-btn flip" onclick="flipCard()">翻面查看</button>
-        </div>
-      </div>
-      <div id="vm-quiz-div" style="display:none">
-        <div class="quiz-card" id="qbox"></div>
-      </div>
-    </section>
-
-    <!-- 假名 -->
-    <section id="s-kana" class="section">
-      <div class="section-header">
-        <h1 class="section-title">🔤 假名模式</h1>
-        <div class="word-count">N4考試題型</div>
-      </div>
-      <div class="kana-info">看平假名・片假名，答出漢字和意思！</div>
-      <div class="mode-switch">
-        <button class="mode-btn active" onclick="setKMode('flash')" id="km-flash">抽認卡</button>
-        <button class="mode-btn" onclick="setKMode('kanji')" id="km-kanji">猜漢字</button>
-        <button class="mode-btn" onclick="setKMode('meaning')" id="km-meaning">猜意思</button>
-      </div>
-      <div class="stats-bar">
-        <div class="stat-item"><span class="stat-val blue" id="sk-t">0</span><span class="stat-label">進度</span></div>
-        <div class="stat-item"><span class="stat-val green" id="sk-k">0</span><span class="stat-label">答對</span></div>
-        <div class="stat-item"><span class="stat-val red" id="sk-f">0</span><span class="stat-label">答錯</span></div>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="kp"></div></div>
-      <div id="km-flash-div">
-        <div class="card-nav">
-          <button class="nav-arrow" onclick="kPrev()">← 上一張</button>
-          <div class="card-counter" id="kcnt"></div>
-          <button class="nav-arrow" onclick="flipKana()">翻面 →</button>
-        </div>
-        <div class="card-scene" onclick="flipKana()">
-          <div class="card-body" id="kci">
-            <div class="card-face front" id="kfront"></div>
-            <div class="card-face back" id="kback"></div>
-          </div>
-        </div>
-        <p class="tap-hint" id="khint">看平假名，翻面確認漢字和意思</p>
-        <div class="action-row" id="kact" style="display:none">
-          <button class="action-btn nope" onclick="kAns(false)">😅 答錯了</button>
-          <button class="action-btn know" onclick="kAns(true)">✅ 答對了！</button>
-        </div>
-        <div class="action-row" id="kflip">
-          <button class="action-btn speak" onclick="speakKana()">🔊 聽發音</button>
-          <button class="action-btn flip" onclick="flipKana()">翻面確認</button>
-        </div>
-      </div>
-      <div id="km-kanji-div" style="display:none"><div class="quiz-card" id="kquiz-kanji"></div></div>
-      <div id="km-meaning-div" style="display:none"><div class="quiz-card" id="kquiz-meaning"></div></div>
-    </section>
-
-    <!-- 聽力 -->
-    <section id="s-listen" class="section">
-      <div class="section-header">
-        <h1 class="section-title">聽力練習</h1>
-        <div class="word-count">聽音辨字</div>
-      </div>
-      <div class="stats-bar">
-        <div class="stat-item"><span class="stat-val blue" id="sl-t">0</span><span class="stat-label">題數</span></div>
-        <div class="stat-item"><span class="stat-val green" id="sl-k">0</span><span class="stat-label">答對</span></div>
-        <div class="stat-item"><span class="stat-val red" id="sl-f">0</span><span class="stat-label">答錯</span></div>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="lp"></div></div>
-      <div class="listen-card" id="lcard">
-        <div class="listen-num" id="lnum"></div>
-        <div class="listen-icon">🎧</div>
-        <p class="listen-hint">按下播放，聽發音猜單字</p>
-        <button class="play-btn" onclick="playListen()">▶ 播放</button>
-        <div class="listen-reveal" id="lreveal" style="display:none"></div>
-      </div>
-      <div class="action-row" id="lact" style="display:none">
-        <button class="action-btn nope" onclick="lPrev()">← 上一題</button>
-        <button class="action-btn nope" onclick="lAns(false)">❌ 答錯了</button>
-        <button class="action-btn know" onclick="lAns(true)">✅ 答對了！</button>
-      </div>
-      <div class="action-row" id="lplay">
-        <button class="action-btn speak" onclick="playListen()">🔊 再聽一次</button>
-        <button class="action-btn flip" onclick="showListen()">顯示答案</button>
-      </div>
-    </section>
-
-    <!-- 文法 -->
-    <section id="s-grammar" class="section">
-      <div class="section-header">
-        <h1 class="section-title">文法練習</h1>
-        <div class="word-count">動詞變化</div>
-      </div>
-      <div class="g-type-scroll" id="gtabs"></div>
-      <div class="rule-card" id="grule"></div>
-      <div class="stats-bar">
-        <div class="stat-item"><span class="stat-val blue" id="sg-t">0</span><span class="stat-label">進度</span></div>
-        <div class="stat-item"><span class="stat-val green" id="sg-k">0</span><span class="stat-label">答對</span></div>
-        <div class="stat-item"><span class="stat-val red" id="sg-f">0</span><span class="stat-label">答錯</span></div>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="gp"></div></div>
-      <div class="grammar-card" id="gbox"></div>
-    </section>
-
-    <!-- 複習 -->
-    <section id="s-review" class="section">
-      <div class="section-header">
-        <h1 class="section-title">複習清單</h1>
-        <button class="reset-btn" onclick="resetAll()">重置進度</button>
-      </div>
-      <div class="mode-switch">
-        <button class="mode-btn active" onclick="setRTab('vocab')" id="rt-vocab">單字</button>
-        <button class="mode-btn" onclick="setRTab('kana')" id="rt-kana">假名</button>
-        <button class="mode-btn" onclick="setRTab('grammar')" id="rt-grammar">文法</button>
-      </div>
-      <div id="rv-vocab"></div>
-      <div id="rv-kana" style="display:none"></div>
-      <div id="rv-grammar" style="display:none"></div>
-    </section>
-
-  </main>
+<div class="topbar">
+  <div>
+    <div class="topbar-title">N4 單字</div>
+    <div class="topbar-count" id="topbar-count">590 個單字</div>
+  </div>
+  <div class="topbar-controls">
+    <button class="ctrl-btn" onclick="toggleFont()">🔤</button>
+    <button class="ctrl-btn" onclick="shuffleCards()">🔀</button>
+    <button class="ctrl-btn" onclick="resetAll()">↺</button>
+  </div>
 </div>
-<script src="src/data.js"></script>
-<script src="src/app.js"></script>
-<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+
+<div class="progress-wrap">
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div class="filter-tabs">
+  <button class="ftab active" data-f="all"  onclick="setFilter('all',this)">全部</button>
+  <button class="ftab" data-f="noun" onclick="setFilter('noun',this)">🔵 名詞</button>
+  <button class="ftab" data-f="verb" onclick="setFilter('verb',this)">🟢 動詞</button>
+  <button class="ftab" data-f="adj"  onclick="setFilter('adj',this)">🟠 形容詞</button>
+  <button class="ftab" data-f="adv"  onclick="setFilter('adv',this)">🟣 副詞</button>
+  <button class="ftab" data-f="expr" onclick="setFilter('expr',this)">🟡 表達</button>
+  <button class="ftab" data-f="star" onclick="setFilter('star',this)">⭐ 收藏</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-chip">已知 <span id="s-know">0</span></div>
+  <div class="stat-chip">不熟 <span id="s-miss">0</span></div>
+  <div class="stat-chip">⭐ <span id="s-star">0</span></div>
+</div>
+
+<div class="card-area">
+  <div class="card-container" id="card-container"
+    ontouchstart="touchStart(event)" ontouchend="touchEnd(event)">
+    <div class="card" id="main-card" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="card-num" id="c-num"></div>
+        <button class="star-btn" id="c-star" onclick="event.stopPropagation();toggleStar()">☆</button>
+        <div class="card-kana" id="c-kana"></div>
+        <div class="card-emoji" id="c-emoji"></div>
+        <div class="pos-badge" id="c-pos-front"></div>
+        <div class="miss-counter" id="c-miss"></div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-num" id="c-num2"></div>
+        <div class="card-kanji" id="c-kanji"></div>
+        <div class="card-kana-back" id="c-kana-back"></div>
+        <div class="card-meaning" id="c-meaning"></div>
+        <div class="card-example" id="c-example"></div>
+        <div class="pos-badge" id="c-pos-back"></div>
+      </div>
+    </div>
+  </div>
+  <div class="swipe-hint">點擊翻牌 · 左右滑動切換</div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn" onclick="prevCard()">‹</button>
+  <button class="nav-btn miss" onclick="markMiss()">✗ 不熟</button>
+  <div class="nav-center">
+    <div class="nav-idx" id="nav-idx">1</div>
+    <div class="nav-total" id="nav-total">/ 590</div>
+  </div>
+  <button class="nav-btn know" onclick="markKnow()">✓ 認識</button>
+  <button class="nav-btn" onclick="nextCard()">›</button>
+</div>
+
+<script>
+const raw = [
+  [1,"挨拶","あいさつ","noun","打招呼","毎朝、元気に挨拶しましょう。","每天早上要精神地打招呼。","👋"],
+  [2,"青","あお","noun","藍色","空は青いです。","天空是藍色的。","🔵"],
+  [3,"青い","あおい","adj","藍色的","青い空が好きです。","我喜歡藍色的天空。","🌊"],
+  [4,"赤","あか","noun","紅色","赤いりんごを食べます。","吃紅蘋果。","🔴"],
+  [5,"秋","あき","noun","秋天","秋になると葉が落ちます。","到了秋天樹葉就會掉落。","🍂"],
+  [6,"空き缶","あきかん","noun","空罐子","空き缶を捨てないでください。","請不要亂丟空罐。","🥫"],
+  [7,"開ける","あける","verb","打開","窓を開けてください。","請打開窗戶。","🚪"],
+  [8,"味","あじ","noun","味道","この料理は味がいいです。","這道料理味道很好。","😋"],
+  [9,"遊ぶ","あそぶ","verb","玩耍","子供たちが公園で遊んでいます。","孩子們在公園玩耍。","🎮"],
+  [10,"温かい","あたたかい","adj","溫暖的","温かいお茶を飲みます。","喝溫茶。","☕"],
+  [11,"集まる","あつまる","verb","聚集","友達が家に集まります。","朋友們聚集到家裡。","👥"],
+  [12,"集める","あつめる","verb","收集","切手を集めています。","我在集郵。","📬"],
+  [13,"宛先","あてさき","noun","收件人地址","宛先を確認してください。","請確認收件人地址。","📮"],
+  [14,"あまり","あまり","adv","不太（後接否定）","あまり好きじゃないです。","不太喜歡。","🙅"],
+  [15,"雨","あめ","noun","雨","雨が降っています。","在下雨。","🌧️"],
+  [16,"謝る","あやまる","verb","道歉","失敗したので謝りました。","因為失敗所以道歉了。","🙇"],
+  [17,"アリさん","ありさん","noun","螞蟻","アリさんが働いています。","螞蟻在工作。","🐜"],
+  [18,"歩く","あるく","verb","走路","毎日30分歩きます。","每天走路30分鐘。","🚶"],
+  [19,"アルバイト","アルバイト","noun","打工","学生がアルバイトをしています。","學生在打工。","💼"],
+  [20,"案内","あんない","noun","引導","駅まで案内します。","我帶你到車站。","🗺️"],
+  [21,"以外","いがい","noun","以外","これ以外に方法はありません。","除了這個沒有其他方法。","➡️"],
+  [22,"意外","いがい","adj","意外的","意外な結果になりました。","出現了意外的結果。","😲"],
+  [23,"生け花","いけばな","noun","插花","生け花を習っています。","我在學插花。","💐"],
+  [24,"意見","いけん","noun","意見","あなたの意見を聞かせてください。","請告訴我你的意見。","💬"],
+  [25,"石","いし","noun","石頭","川で石を拾いました。","在河邊撿了石頭。","🪨"],
+  [26,"急がない","いそがない","verb","不趕快","急がないと遅れます。","不快點就會遲到。","🐢"],
+  [27,"頂きます","いただきます","expr","我開動了","食事の前に頂きますと言います。","吃飯前說我開動了。","🍽️"],
+  [28,"一日中","いちにちちゅう","adv","一整天","一日中勉強しました。","讀書讀了一整天。","📅"],
+  [29,"いつか","いつか","adv","總有一天","いつか日本に行きたいです。","總有一天想去日本。","🌟"],
+  [30,"いつでも","いつでも","adv","隨時","いつでも来てください。","請隨時來。","🕐"],
+  [31,"いつまで","いつまで","adv","到什麼時候","いつまで待てばいいですか。","要等到什麼時候呢？","⏳"],
+  [32,"いつも","いつも","adv","總是","いつも笑顔ですね。","你總是面帶笑容呢。","😊"],
+  [33,"糸","いと","noun","線","針に糸を通します。","把線穿過針。","🧵"],
+  [34,"今すぐ","いますぐ","adv","馬上","今すぐ来てください。","請馬上過來。","⚡"],
+  [35,"意味","いみ","noun","意思","この言葉の意味は何ですか。","這個詞的意思是什麼？","📖"],
+  [36,"いらっしゃいませ","いらっしゃいませ","expr","歡迎光臨","店員が「いらっしゃいませ」と言いました。","店員說歡迎光臨。","🏪"],
+  [37,"入れる","いれる","verb","放入","バッグに荷物を入れます。","把行李放進包包裡。","📦"],
+  [38,"インターネット","インターネット","noun","網路","インターネットで調べます。","用網路查詢。","🌐"],
+  [39,"受付","うけつけ","noun","接待處","受付で名前を書きます。","在接待處填寫姓名。","🏢"],
+  [40,"受ける","うける","verb","接受","試験を受けます。","參加考試。","📝"],
+  [41,"動かない","うごかない","verb","不動","車が動かないです。","車子不動了。","🚗"],
+  [42,"薄い","うすい","adj","薄的","この本は薄いです。","這本書很薄。","📄"],
+  [43,"嘘","うそ","noun","謊言","嘘をついてはいけません。","不可以說謊。","🤥"],
+  [44,"うっかり","うっかり","adv","不小心","うっかり忘れてしまいました。","不小心忘記了。","😅"],
+  [45,"美しい","うつくしい","adj","美麗的","富士山は美しいです。","富士山很美麗。","🏔️"],
+  [46,"写さない","うつさない","verb","不抄寫","人のを写さないでください。","請不要抄別人的。","🚫"],
+  [47,"移す","うつす","verb","移動","机を部屋に移します。","把桌子移到房間裡。","📦"],
+  [48,"映す","うつす","verb","投影","スクリーンに映します。","投影到螢幕上。","📽️"],
+  [49,"写す","うつす","verb","抄寫","ノートに写します。","抄寫到筆記本上。","✍️"],
+  [50,"うまい","うまい","adj","好吃・厲害","この料理はうまいです。","這道料理很好吃。","👍"],
+  [51,"売り場","うりば","noun","賣場","食品売り場はどこですか。","食品賣場在哪裡？","🏬"],
+  [52,"売る","うる","verb","賣","お土産を売っています。","在賣伴手禮。","🛒"],
+  [53,"上着","うわぎ","noun","外套","上着を着てください。","請穿上外套。","🧥"],
+  [54,"運転","うんてん","noun","駕駛","車を運転します。","駕駛汽車。","🚗"],
+  [55,"運転手","うんてんしゅ","noun","司機","バスの運転手さんに聞きます。","向公車司機詢問。","🚌"],
+  [56,"運動場","うんどうじょう","noun","運動場","運動場で走ります。","在運動場跑步。","🏃"],
+  [57,"営業","えいぎょう","noun","營業","9時から営業しています。","從9點開始營業。","🏪"],
+  [58,"駅員","えきいん","noun","車站工作人員","駅員に道を聞きました。","向車站工作人員問路。","🚉"],
+  [59,"エスカレーター","エスカレーター","noun","手扶梯","エスカレーターで上がります。","搭手扶梯上去。","🔼"],
+  [60,"蝦","えび","noun","蝦子","エビが好きです。","我喜歡蝦子。","🦐"],
+  [61,"絵本","えほん","noun","繪本","子供に絵本を読みます。","讀繪本給孩子聽。","📚"],
+  [62,"選ぶ","えらぶ","verb","選擇","好きな色を選んでください。","請選擇喜歡的顏色。","🎨"],
+  [63,"エレベーター","エレベーター","noun","電梯","エレベーターで3階へ行きます。","搭電梯到3樓。","🛗"],
+  [64,"エンジニア","エンジニア","noun","工程師","彼はエンジニアです。","他是工程師。","👨‍💻"],
+  [65,"遠慮","えんりょ","noun","客氣","遠慮しないでください。","請不要客氣。","🙏"],
+  [66,"大勢","おおぜい","noun","很多人","大勢の人が集まりました。","聚集了很多人。","👨‍👩‍👧‍👦"],
+  [67,"オートバイ","オートバイ","noun","摩托車","オートバイで来ました。","騎摩托車來了。","🏍️"],
+  [68,"お菓子","おかし","noun","點心","お菓子を食べます。","吃點心。","🍪"],
+  [69,"お客","おきゃく","noun","客人","お客さんが来ています。","有客人來了。","🧑‍🤝‍🧑"],
+  [70,"起きる","おきる","verb","起床","朝6時に起きます。","早上6點起床。","⏰"],
+  [71,"遅れる","おくれる","verb","遲到","電車が遅れています。","電車誤點了。","⏱️"],
+  [72,"怒る","おこる","verb","生氣","先生が怒りました。","老師生氣了。","😠"],
+  [73,"お辞儀","おじぎ","noun","鞠躬","深くお辞儀をします。","深深地鞠躬。","🙇"],
+  [74,"お知らせ","おしらせ","noun","通知","大切なお知らせがあります。","有重要通知。","📢"],
+  [75,"押す","おす","verb","推・按","ボタンを押してください。","請按按鈕。","🔘"],
+  [76,"遅い","おそい","adj","慢的","この電車は遅いです。","這列電車很慢。","🐌"],
+  [77,"教わる","おそわる","verb","被教導","先生に教わります。","向老師學習。","🎓"],
+  [78,"落ちる","おちる","verb","掉落","リンゴが落ちました。","蘋果掉下來了。","🍎"],
+  [79,"音","おと","noun","聲音","大きな音がします。","發出很大的聲音。","🔊"],
+  [80,"落とす","おとす","verb","掉落（使）","財布を落としました。","錢包掉了。","👛"],
+  [81,"大人しい","おとなしい","adj","乖巧的","大人しい子供です。","是個安靜的孩子。","😌"],
+  [82,"驚く","おどろく","verb","驚訝","突然の知らせに驚きました。","對突然的消息感到驚訝。","😱"],
+  [83,"お腹","おなか","noun","肚子","お腹が空きました。","肚子餓了。","🍽️"],
+  [84,"同じ","おなじ","adj","相同的","同じ色です。","是相同的顏色。","👯"],
+  [85,"お久しぶり","おひさしぶり","expr","好久不見","お久しぶりですね！","好久不見呢！","🤗"],
+  [86,"覚える","おぼえる","verb","記住","単語を覚えます。","記住單字。","🧠"],
+  [87,"お見舞い","おみまい","noun","探病","入院した友達にお見舞いに行きます。","去探望住院的朋友。","🏥"],
+  [88,"思い出","おもいで","noun","回憶","楽しい思い出があります。","有美好的回憶。","📸"],
+  [89,"泳ぐ","およぐ","verb","游泳","プールで泳ぎます。","在游泳池游泳。","🏊"],
+  [90,"お礼","おれい","noun","道謝","お礼を言います。","說謝謝。","🎁"],
+  [91,"カード","カード","noun","卡片","クレジットカードで払います。","用信用卡付款。","💳"],
+  [92,"外国人","がいこくじん","noun","外國人","外国人が多い街です。","是個外國人很多的城市。","🌍"],
+  [93,"改札口","かいさつぐち","noun","剪票口","改札口で待ちます。","在剪票口等待。","🚉"],
+  [94,"会場","かいじょう","noun","會場","会場に集まってください。","請聚集到會場。","🏛️"],
+  [95,"階段","かいだん","noun","樓梯","階段を上ります。","爬樓梯。","🪜"],
+  [96,"会話","かいわ","noun","會話","日本語で会話します。","用日文對話。","💬"],
+  [97,"返す","かえす","verb","歸還","本を図書館に返します。","把書還給圖書館。","📚"],
+  [98,"替える","かえる","verb","替換","電球を替えます。","替換燈泡。","💡"],
+  [99,"係り","かかり","noun","負責人","係りの人に聞いてください。","請問負責人。","👔"],
+  [100,"鍵","かぎ","noun","鑰匙","鍵をなくしました。","把鑰匙弄丟了。","🔑"],
+  [101,"家具","かぐ","noun","家具","新しい家具を買います。","買新家具。","🛋️"],
+  [102,"飾る","かざる","verb","裝飾","部屋に花を飾ります。","在房間裡裝飾花。","🌸"],
+  [103,"貸す","かす","verb","借出","友達に本を貸します。","把書借給朋友。","📗"],
+  [104,"数","かず","noun","數量","数が多いです。","數量很多。","🔢"],
+  [105,"数える","かぞえる","verb","數數","1から10まで数えます。","從1數到10。","🔢"],
+  [106,"形","かたち","noun","形狀","丸い形です。","是圓形。","⭕"],
+  [107,"片付ける","かたづける","verb","整理","部屋を片付けます。","整理房間。","🧹"],
+  [108,"課長","かちょう","noun","課長","課長に報告します。","向課長報告。","👔"],
+  [109,"角","かど","noun","轉角","角を曲がってください。","請在轉角轉彎。","📐"],
+  [110,"必ず","かならず","adv","一定","必ず来てください。","請一定要來。","✅"],
+  [111,"咬む","かむ","verb","咬","よく咬んで食べます。","仔細咀嚼。","🦷"],
+  [112,"通う","かよう","verb","通勤","学校に通っています。","在上學。","🏫"],
+  [113,"体","からだ","noun","身體","体を大切にしてください。","請愛護身體。","💪"],
+  [114,"借りる","かりる","verb","借入","図書館で本を借ります。","在圖書館借書。","📖"],
+  [115,"軽い","かるい","adj","輕的","このカバンは軽いです。","這個包包很輕。","🪶"],
+  [116,"カレー","カレー","noun","咖哩","カレーを食べます。","吃咖哩。","🍛"],
+  [117,"乾く","かわく","verb","乾燥","洗濯物が乾きました。","洗好的衣服乾了。","👕"],
+  [118,"変わる","かわる","verb","改變","天気が変わりました。","天氣變了。","🔄"],
+  [119,"考える","かんがえる","verb","思考","よく考えてから答えます。","仔細思考後回答。","🤔"],
+  [120,"関係","かんけい","noun","關係","彼とは関係がありません。","和他沒有關係。","🔗"],
+  [121,"看護師","かんごし","noun","護理師","看護師になりたいです。","想成為護理師。","🏥"],
+  [122,"黄色","きいろ","noun","黃色","ひまわりは黄色いです。","向日葵是黃色的。","🟡"],
+  [123,"消える","きえる","verb","消失","電気が消えました。","燈滅了。","💡"],
+  [124,"機械","きかい","noun","機器","機械が故障しました。","機器故障了。","⚙️"],
+  [125,"危険","きけん","noun","危險","ここは危険です。","這裡很危險。","⚠️"],
+  [126,"帰国","きこく","noun","回國","来月帰国します。","下個月回國。","✈️"],
+  [127,"技術","ぎじゅつ","noun","技術","技術を学びます。","學習技術。","🔧"],
+  [128,"汚い","きたない","adj","髒的","部屋が汚いです。","房間很髒。","🧹"],
+  [129,"喫茶店","きっさてん","noun","咖啡廳","喫茶店でコーヒーを飲みます。","在咖啡廳喝咖啡。","☕"],
+  [130,"きっと","きっと","adv","一定","きっと大丈夫です。","一定沒問題的。","💯"],
+  [131,"厳しい","きびしい","adj","嚴格的","先生は厳しいです。","老師很嚴格。","😤"],
+  [132,"決まる","きまる","verb","決定（自）","日程が決まりました。","日程決定了。","📅"],
+  [133,"決める","きめる","verb","決定（他）","目標を決めます。","決定目標。","🎯"],
+  [134,"気持ち","きもち","noun","心情","今日は気持ちがいいです。","今天心情很好。","😊"],
+  [135,"着物","きもの","noun","和服","着物を着ます。","穿和服。","👘"],
+  [136,"急行","きゅうこう","noun","急行列車","急行に乗ります。","搭急行列車。","🚄"],
+  [137,"牛乳","ぎゅうにゅう","noun","牛奶","毎朝牛乳を飲みます。","每天早上喝牛奶。","🥛"],
+  [138,"胡瓜","きゅうり","noun","小黃瓜","きゅうりのサラダを食べます。","吃小黃瓜沙拉。","🥒"],
+  [139,"教育","きょういく","noun","教育","教育は大切です。","教育很重要。","🎓"],
+  [140,"興味","きょうみ","noun","興趣","日本語に興味があります。","對日文有興趣。","✨"],
+  [141,"切る","きる","verb","切割","野菜を切ります。","切蔬菜。","🔪"],
+  [142,"着る","きる","verb","穿（上衣）","シャツを着ます。","穿襯衫。","👕"],
+  [143,"切れる","きれる","verb","用完","電池が切れました。","電池沒電了。","🔋"],
+  [144,"禁煙","きんえん","noun","禁菸","ここは禁煙です。","這裡禁菸。","🚭"],
+  [145,"近所","きんじょ","noun","附近","近所に公園があります。","附近有公園。","🏡"],
+  [146,"具合","ぐあい","noun","狀況","具合が悪いです。","身體狀況不好。","🤒"],
+  [147,"空港","くうこう","noun","機場","空港まで迎えに来ます。","來機場迎接。","✈️"],
+  [148,"クッキー","クッキー","noun","餅乾","クッキーを焼きます。","烤餅乾。","🍪"],
+  [149,"雲","くも","noun","雲","空に雲があります。","天空有雲。","☁️"],
+  [150,"曇り","くもり","noun","陰天","今日は曇りです。","今天是陰天。","⛅"],
+  [151,"クラブ","クラブ","noun","社團","テニスクラブに入ります。","加入網球社。","🎾"],
+  [152,"比べる","くらべる","verb","比較","二つを比べます。","比較兩個。","⚖️"],
+  [153,"グラム","グラム","noun","公克","100グラムください。","請給我100公克。","⚖️"],
+  [154,"グループ","グループ","noun","群組","グループに分けます。","分成小組。","👥"],
+  [155,"計画","けいかく","noun","計劃","旅行の計画を立てます。","制定旅行計劃。","📋"],
+  [156,"経験","けいけん","noun","經驗","経験が大切です。","經驗很重要。","⭐"],
+  [157,"警察官","けいさつかん","noun","警察","警察官に聞きます。","向警察詢問。","👮"],
+  [158,"ケーキ","ケーキ","noun","蛋糕","誕生日ケーキを食べます。","吃生日蛋糕。","🎂"],
+  [159,"ゲーム","ゲーム","noun","遊戲","ゲームをします。","玩遊戲。","🎮"],
+  [160,"怪我","けが","noun","受傷","怪我をしました。","受傷了。","🩹"],
+  [161,"景色","けしき","noun","景色","富士山の景色が美しいです。","富士山的景色很美。","🏔️"],
+  [162,"消す","けす","verb","關掉","電気を消します。","關燈。","💡"],
+  [163,"結婚式","けっこんしき","noun","婚禮","結婚式に出席します。","出席婚禮。","💒"],
+  [164,"軒","けん","noun","（建物計量）棟","家が3軒あります。","有3棟房子。","🏠"],
+  [165,"見学","けんがく","noun","參觀","工場を見学します。","參觀工廠。","👀"],
+  [166,"玄関","げんかん","noun","玄關","玄関で靴を脱ぎます。","在玄關脫鞋。","🚪"],
+  [167,"見物","けんぶつ","noun","觀光","お寺を見物します。","參觀寺廟。","⛩️"],
+  [168,"交差点","こうさてん","noun","十字路口","交差点で曲がります。","在十字路口轉彎。","🚦"],
+  [169,"工事","こうじ","noun","施工","道路の工事があります。","道路正在施工。","🚧"],
+  [170,"工場","こうじょう","noun","工廠","工場で働いています。","在工廠工作。","🏭"],
+  [171,"工場見学","こうじょうけんがく","noun","參觀工廠","工場見学に行きます。","去參觀工廠。","🏭"],
+  [172,"声","こえ","noun","聲音","大きな声で話します。","用大聲說話。","🗣️"],
+  [173,"黒板","こくばん","noun","黑板","黒板に書きます。","寫在黑板上。","📋"],
+  [174,"故障","こしょう","noun","故障","パソコンが故障しました。","電腦故障了。","💻"],
+  [175,"午前中","ごぜんちゅう","noun","上午","午前中に終わります。","上午就完成。","🌅"],
+  [176,"答える","こたえる","verb","回答","質問に答えます。","回答問題。","✋"],
+  [177,"コップ","コップ","noun","杯子","水をコップに入れます。","把水倒進杯子。","🥤"],
+  [178,"言葉","ことば","noun","語言","日本語の言葉を覚えます。","記住日文單字。","📝"],
+  [179,"この辺","このへん","expr","這附近","この辺に駅はありますか。","這附近有車站嗎？","📍"],
+  [180,"コピー","コピー","noun","影印","書類をコピーします。","影印文件。","📄"],
+  [181,"細かい","こまかい","adj","細小的","細かいことが気になります。","細節讓我在意。","🔍"],
+  [182,"困る","こまる","verb","困擾","お金がなくて困ります。","因為沒錢而困擾。","😣"],
+  [183,"ゴミ","ごみ","noun","垃圾","ゴミを捨てます。","丟垃圾。","🗑️"],
+  [184,"混む","こむ","verb","擁擠","電車が混んでいます。","電車很擁擠。","🚇"],
+  [185,"米","こめ","noun","白米","お米を炊きます。","煮白飯。","🍚"],
+  [186,"壊す","こわす","verb","弄壞","ゲームを壊しました。","把遊戲機弄壞了。","💥"],
+  [187,"壊れる","こわれる","verb","壞掉","テレビが壊れました。","電視壞了。","📺"],
+  [188,"コンサート","コンサート","noun","音樂會","コンサートに行きます。","去音樂會。","🎵"],
+  [189,"今度","こんど","noun","下次","今度は一緒に行きましょう。","下次一起去吧。","📅"],
+  [190,"コンビニ","コンビニ","noun","便利商店","コンビニで買います。","在便利商店買。","🏪"],
+  [191,"サービス","サービス","noun","服務","サービスがいいです。","服務很好。","⭐"],
+  [192,"最近","さいきん","adv","最近","最近忙しいです。","最近很忙。","📅"],
+  [193,"財布","さいふ","noun","錢包","財布を持ちます。","帶錢包。","👛"],
+  [194,"サイン","サイン","noun","簽名","サインをお願いします。","請幫我簽名。","✍️"],
+  [195,"探す","さがす","verb","尋找","鍵を探しています。","在找鑰匙。","🔍"],
+  [196,"作文","さくぶん","noun","作文","日本語で作文を書きます。","用日文寫作文。","✏️"],
+  [197,"差す","さす","verb","撐（傘）","傘を差します。","撐傘。","☂️"],
+  [198,"誘う","さそう","verb","邀請","友達を映画に誘います。","邀請朋友看電影。","🎬"],
+  [199,"冊","さつ","noun","（書籍）冊","本を3冊買います。","買3冊書。","📚"],
+  [200,"サッカー","サッカー","noun","足球","サッカーをします。","踢足球。","⚽"],
+  [201,"皿","さら","noun","盤子","皿を洗います。","洗盤子。","🍽️"],
+  [202,"サラダ","サラダ","noun","沙拉","サラダを食べます。","吃沙拉。","🥗"],
+  [203,"触る","さわる","verb","觸摸","展示物に触らないでください。","請不要觸摸展示品。","🤚"],
+  [204,"賛成","さんせい","noun","贊成","その意見に賛成です。","贊成那個意見。","👍"],
+  [205,"残念","ざんねん","adj","遺憾","残念ですね。","真可惜呢。","😞"],
+  [206,"試合","しあい","noun","比賽","試合に勝ちました。","贏得比賽。","🏆"],
+  [207,"シーズン","シーズン","noun","季節","観光シーズンです。","是觀光旺季。","🌸"],
+  [208,"仕方","しかた","noun","方法","仕方がありません。","沒辦法。","🤷"],
+  [209,"叱る","しかる","verb","責罵","先生に叱られました。","被老師責罵了。","😤"],
+  [210,"時間割","じかんわり","noun","課程表","時間割を確認します。","確認課程表。","📋"],
+  [211,"試験","しけん","noun","考試","試験を受けます。","參加考試。","📝"],
+  [212,"失敗","しっぱい","noun","失敗","失敗を恐れません。","不害怕失敗。","❌"],
+  [213,"質問","しつもん","noun","問題","質問があります。","我有問題。","❓"],
+  [214,"失礼しました","しつれいしました","expr","失禮了","失礼しました。","失禮了。","🙇"],
+  [215,"自転車","じてんしゃ","noun","腳踏車","自転車で通学します。","騎腳踏車上學。","🚲"],
+  [216,"品物","しなもの","noun","物品","品物を確認します。","確認物品。","📦"],
+  [217,"自分","じぶん","noun","自己","自分でやります。","自己做。","🙋"],
+  [218,"事務所","じむしょ","noun","辦公室","事務所に連絡します。","聯絡辦公室。","🏢"],
+  [219,"閉める","しめる","verb","關閉","ドアを閉めます。","關門。","🚪"],
+  [220,"じゃがいも","じゃがいも","noun","馬鈴薯","じゃがいもを茹でます。","煮馬鈴薯。","🥔"],
+  [221,"シャツ","シャツ","noun","襯衫","白いシャツを着ます。","穿白襯衫。","👕"],
+  [222,"シャンプー","シャンプー","noun","洗髮精","シャンプーで髪を洗います。","用洗髮精洗頭。","🧴"],
+  [223,"習慣","しゅうかん","noun","習慣","毎日運動する習慣があります。","有每天運動的習慣。","📅"],
+  [224,"住所","じゅうしょ","noun","住址","住所を教えてください。","請告訴我住址。","🏠"],
+  [225,"授業","じゅぎょう","noun","上課","授業が始まります。","上課開始了。","🏫"],
+  [226,"宿題","しゅくだい","noun","作業","宿題をします。","做作業。","✏️"],
+  [227,"出発","しゅっぱつ","noun","出發","9時に出発します。","9點出發。","🚀"],
+  [228,"趣味","しゅみ","noun","嗜好","趣味は読書です。","嗜好是閱讀。","📚"],
+  [229,"種類","しゅるい","noun","種類","いろんな種類があります。","有各種種類。","📊"],
+  [230,"準備","じゅんび","noun","準備","旅行の準備をします。","做旅行準備。","🎒"],
+  [231,"紹介","しょうかい","noun","介紹","友達を紹介します。","介紹朋友。","🤝"],
+  [232,"承知する","しょうちする","verb","知道・同意","承知しました。","我知道了。","✅"],
+  [233,"小説","しょうせつ","noun","小說","小説を読みます。","看小說。","📗"],
+  [234,"招待","しょうたい","noun","邀請","パーティーに招待されました。","被邀請參加派對。","💌"],
+  [235,"丈夫","じょうぶ","adj","健壯的","丈夫な体です。","身體很健壯。","💪"],
+  [236,"ジョギング","ジョギング","noun","慢跑","毎朝ジョギングします。","每天早上慢跑。","🏃"],
+  [237,"食堂","しょくどう","noun","食堂","食堂で昼ご飯を食べます。","在食堂吃午飯。","🍜"],
+  [238,"食料品","しょくりょうひん","noun","食品","食料品を買います。","買食品。","🛒"],
+  [239,"調べる","しらべる","verb","調查","インターネットで調べます。","用網路調查。","🔍"],
+  [240,"知る","しる","verb","知道","知っていますか？","你知道嗎？","🧠"],
+  [241,"シングル","シングル","noun","單人房","シングルルームを予約します。","預約單人房。","🛏️"],
+  [242,"神社","じんじゃ","noun","神社","神社に参ります。","參拜神社。","⛩️"],
+  [243,"心配","しんぱい","noun","擔心","心配しないでください。","請不要擔心。","😟"],
+  [244,"水泳","すいえい","noun","游泳","水泳が得意です。","擅長游泳。","🏊"],
+  [245,"スイッチ","スイッチ","noun","開關","スイッチを押します。","按開關。","🔘"],
+  [246,"スーツ","スーツ","noun","西裝","スーツを着ます。","穿西裝。","👔"],
+  [247,"好き","すき","adj","喜歡的","音楽が好きです。","喜歡音樂。","❤️"],
+  [248,"スキー","スキー","noun","滑雪","冬にスキーをします。","冬天滑雪。","⛷️"],
+  [249,"空く","すく","verb","變空","席が空きました。","位置空出來了。","💺"],
+  [250,"少ない","すくない","adj","少的","お金が少ないです。","錢很少。","💰"],
+  [251,"進む","すすむ","verb","前進","まっすぐ進みます。","直走前進。","➡️"],
+  [252,"スタート","スタート","noun","開始","スタートします。","開始了。","🚀"],
+  [253,"すっかり","すっかり","adv","完全地","すっかり忘れました。","完全忘記了。","😶"],
+  [254,"ずっと","ずっと","adv","一直","ずっと待っています。","一直在等待。","⏳"],
+  [255,"捨てる","すてる","verb","丟棄","ゴミを捨てます。","丟垃圾。","🗑️"],
+  [256,"スポーツ","スポーツ","noun","運動","スポーツが好きです。","喜歡運動。","⚽"],
+  [257,"留守","るす","noun","不在家","留守にしています。","不在家。","🏠"],
+  [258,"座る","すわる","verb","坐下","椅子に座ります。","坐在椅子上。","💺"],
+  [259,"生活","せいかつ","noun","生活","便利な生活です。","便利的生活。","🏠"],
+  [260,"生産","せいさん","noun","生產","商品を生産します。","生產商品。","🏭"],
+  [261,"精算","せいさん","noun","結算","精算機で精算します。","在結算機結算。","💴"],
+  [262,"セーター","セーター","noun","毛衣","冬はセーターを着ます。","冬天穿毛衣。","🧥"],
+  [263,"世界","せかい","noun","世界","世界旅行をしたいです。","想環遊世界。","🌍"],
+  [264,"咳","せき","noun","咳嗽","咳が出ます。","咳嗽了。","😷"],
+  [265,"席","せき","noun","座位","席を探します。","找座位。","💺"],
+  [266,"接待","せったい","noun","接待","取引先を接待します。","接待客戶。","🍽️"],
+  [267,"説明","せつめい","noun","說明","説明してください。","請說明。","📢"],
+  [268,"是非","ぜひ","adv","務必","是非来てください。","請務必來。","🙏"],
+  [269,"狭い","せまい","adj","狹窄的","この部屋は狭いです。","這個房間很狹窄。","📏"],
+  [270,"世話","せわ","noun","照顧","お世話になっています。","承蒙您照顧。","🤝"],
+  [271,"センチ","センチ","noun","公分","身長は170センチです。","身高170公分。","📏"],
+  [272,"相談","そうだん","noun","商量","先生に相談します。","和老師商量。","💬"],
+  [273,"ソース","ソース","noun","醬汁","ソースをかけます。","淋上醬汁。","🍶"],
+  [274,"育てる","そだてる","verb","培育","子供を育てます。","撫養孩子。","👶"],
+  [275,"卒業","そつぎょう","noun","畢業","大学を卒業します。","大學畢業。","🎓"],
+  [276,"ソファー","ソファー","noun","沙發","ソファーに座ります。","坐在沙發上。","🛋️"],
+  [277,"空","そら","noun","天空","空が青いです。","天空是藍的。","☀️"],
+  [278,"そろそろ","そろそろ","adv","差不多該","そろそろ帰ります。","差不多該回去了。","⏰"],
+  [279,"体育館","たいいくかん","noun","體育館","体育館で運動します。","在體育館運動。","🏋️"],
+  [280,"大事","だいじ","adj","重要的","体が大事です。","身體很重要。","❤️"],
+  [281,"大切","たいせつ","adj","珍貴的","時間を大切にします。","珍惜時間。","⏰"],
+  [282,"大体","だいたい","adv","大概","大体分かりました。","大致上明白了。","👌"],
+  [283,"台所","だいどころ","noun","廚房","台所で料理します。","在廚房料理。","🍳"],
+  [284,"タオル","タオル","noun","毛巾","タオルで拭きます。","用毛巾擦。","🧴"],
+  [285,"沢山","たくさん","adv","很多","沢山食べました。","吃了很多。","🍽️"],
+  [286,"尋ねる","たずねる","verb","詢問","道を尋ねます。","詢問路。","❓"],
+  [287,"訪ねる","たずねる","verb","拜訪","友達の家を訪ねます。","拜訪朋友家。","🚪"],
+  [288,"建てる","たてる","verb","建造","家を建てます。","建房子。","🏠"],
+  [289,"立てる","たてる","verb","豎立","計画を立てます。","制定計劃。","📋"],
+  [290,"棚","たな","noun","架子","棚に本を並べます。","把書排列在架子上。","📚"],
+  [291,"楽しむ","たのしむ","verb","享受","旅行を楽しみます。","享受旅行。","😄"],
+  [292,"頼む","たのむ","verb","拜託","友達に頼みます。","拜託朋友。","🙏"],
+  [293,"たばこ","たばこ","noun","香菸","たばこを吸います。","抽香菸。","🚬"],
+  [294,"偶に","たまに","adv","偶爾","たまに映画を見ます。","偶爾看電影。","🎬"],
+  [295,"為","ため","noun","為了","勉強のために来ました。","為了學習而來。","🎯"],
+  [296,"足りる","たりる","verb","足夠","お金が足りません。","錢不夠。","💰"],
+  [297,"誰か","だれか","noun","某人","誰かいますか？","有人嗎？","🙋"],
+  [298,"男性","だんせい","noun","男性","男性用トイレです。","是男性廁所。","👨"],
+  [299,"チェック","チェック","noun","確認","内容をチェックします。","確認內容。","✅"],
+  [300,"近い","ちかい","adj","近的","駅が近いです。","車站很近。","📍"],
+  [301,"近く","ちかく","noun","附近","近くに店があります。","附近有店。","📍"],
+  [302,"チキンカレー","チキンカレー","noun","雞肉咖哩","チキンカレーを食べます。","吃雞肉咖哩。","🍛"],
+  [303,"チケット","チケット","noun","票券","チケットを買います。","買票。","🎟️"],
+  [304,"遅刻","ちこく","noun","遲到","遅刻してすみません。","遲到了對不起。","⏱️"],
+  [305,"チップ","チップ","noun","小費","チップを渡します。","給小費。","💵"],
+  [306,"チャンス","チャンス","noun","機會","チャンスを生かします。","把握機會。","✨"],
+  [307,"注意","ちゅうい","noun","注意","注意してください。","請注意。","⚠️"],
+  [308,"中止","ちゅうし","noun","中止","試合が中止になりました。","比賽中止了。","❌"],
+  [309,"貯金","ちょきん","noun","儲蓄","毎月貯金します。","每個月儲蓄。","💰"],
+  [310,"チョコレート","チョコレート","noun","巧克力","チョコレートが好きです。","喜歡巧克力。","🍫"],
+  [311,"ツイン","ツイン","noun","雙人房","ツインルームを予約します。","預約雙人房。","🛏️"],
+  [312,"捕まえる","つかまえる","verb","抓住","犯人を捕まえます。","抓住犯人。","👮"],
+  [313,"月","つき","noun","月亮","月が綺麗です。","月亮很美。","🌕"],
+  [314,"作る","つくる","verb","製作","料理を作ります。","做料理。","👨‍🍳"],
+  [315,"着く","つく","verb","抵達","駅に着きました。","抵達車站了。","🚉"],
+  [316,"都合","つごう","noun","方便","都合はいいですか？","方便嗎？","📅"],
+  [317,"伝える","つたえる","verb","傳達","伝言を伝えます。","傳達留言。","📨"],
+  [318,"包む","つつむ","verb","包裝","プレゼントを包みます。","包裝禮物。","🎁"],
+  [319,"勤める","つとめる","verb","上班","会社に勤めています。","在公司上班。","🏢"],
+  [320,"努める","つとめる","verb","努力","毎日努めています。","每天努力。","💪"],
+  [321,"つもり","つもり","noun","打算","行くつもりです。","打算去。","🎯"],
+  [322,"連れていく","つれていく","verb","帶去","子供を公園に連れていきます。","帶孩子去公園。","👶"],
+  [323,"丁寧","ていねい","adj","有禮貌的","丁寧に説明します。","仔細說明。","🙏"],
+  [324,"デート","デート","noun","約會","デートをします。","去約會。","💑"],
+  [325,"出かける","でかける","verb","出門","買い物に出かけます。","出門買東西。","🛍️"],
+  [326,"できた","できた","expr","完成了","宿題ができた！","作業完成了！","✅"],
+  [327,"手帳","てちょう","noun","記事本","手帳に書きます。","寫在記事本上。","📓"],
+  [328,"手伝う","てつだう","verb","幫忙","料理を手伝います。","幫忙做料理。","🤝"],
+  [329,"出る","でる","verb","出來","家を出ます。","離開家。","🚪"],
+  [330,"店員","てんいん","noun","店員","店員に聞きます。","問店員。","👩‍💼"],
+  [331,"電気","でんき","noun","電燈","電気をつけます。","開燈。","💡"],
+  [332,"天気予報","てんきよほう","noun","天氣預報","天気予報を見ます。","看天氣預報。","⛅"],
+  [333,"電子レンジ","でんしれんじ","noun","微波爐","電子レンジで温めます。","用微波爐加熱。","📦"],
+  [334,"どうして","どうして","adv","為什麼","どうして来ましたか？","為什麼來了？","❓"],
+  [335,"どうやって","どうやって","adv","怎麼做","どうやって行きますか？","怎麼去？","🗺️"],
+  [336,"どういう","どういう","adv","什麼樣的","どういう意味ですか？","是什麼意思？","❓"],
+  [337,"遠い","とおい","adj","遠的","駅が遠いです。","車站很遠。","📍"],
+  [338,"時々","ときどき","adv","有時候","時々映画を見ます。","有時候看電影。","🎬"],
+  [339,"特に","とくに","adv","特別","特に問題はありません。","沒有特別的問題。","⭐"],
+  [340,"どこか","どこか","adv","某處","どこかに行きたいです。","想去某處。","🗺️"],
+  [341,"閉じる","とじる","verb","關閉（書）","本を閉じます。","闔上書本。","📕"],
+  [342,"途中","とちゅう","noun","途中","途中で止まります。","途中停下來。","🛤️"],
+  [343,"特急","とっきゅう","noun","特快列車","特急で行きます。","搭特快列車去。","🚄"],
+  [344,"届く","とどく","verb","送到","荷物が届きました。","包裹送到了。","📦"],
+  [345,"届ける","とどける","verb","遞送","郵便物を届けます。","遞送郵件。","📮"],
+  [346,"どなた","どなた","noun","哪位（敬）","どなたですか？","請問是哪位？","🙋"],
+  [347,"どのぐらい","どのぐらい","adv","大約多少","どのぐらいかかりますか？","大約需要多久？","⏱️"],
+  [348,"止める","とめる","verb","停止","車を止めます。","停車。","🚗"],
+  [349,"ドライブ","ドライブ","noun","兜風","ドライブに行きます。","去兜風。","🚗"],
+  [350,"直す","なおす","verb","修好","故障を直します。","修好故障。","🔧"],
+  [351,"治す","なおす","verb","治好（病）","風邪を治します。","把感冒治好。","💊"],
+  [352,"治る","なおる","verb","痊癒","病気が治りました。","病好了。","😊"],
+  [353,"直る","なおる","verb","修好（自）","車が直りました。","車子修好了。","🚗"],
+  [354,"なかなか","なかなか","adv","相當","なかなか難しいですね。","相當難呢。","😅"],
+  [355,"泣く","なく","verb","哭泣","子供が泣いています。","孩子在哭泣。","😢"],
+  [356,"無くす","なくす","verb","遺失","財布を無くしました。","遺失了錢包。","😱"],
+  [357,"投げる","なげる","verb","投擲","ボールを投げます。","投球。","⚾"],
+  [358,"何故","なぜ","adv","為什麼","なぜ来ましたか？","為什麼來了？","❓"],
+  [359,"名前","なまえ","noun","名字","名前を教えてください。","請告訴我名字。","📛"],
+  [360,"習う","ならう","verb","學習","ピアノを習います。","學鋼琴。","🎹"],
+  [361,"並べる","ならべる","verb","排列","商品を並べます。","排列商品。","📊"],
+  [362,"慣れる","なれる","verb","習慣","日本の生活に慣れました。","習慣了日本的生活。","😌"],
+  [363,"何回も","なんかいも","adv","好幾次","何回も練習します。","練習好幾次。","🔁"],
+  [364,"似合う","にあう","verb","適合","その服が似合います。","那件衣服很適合你。","👗"],
+  [365,"苦い","にがい","adj","苦的","コーヒーは苦いです。","咖啡是苦的。","😬"],
+  [366,"にこにこ","にこにこ","adv","笑咪咪","にこにこ笑っています。","笑咪咪地笑著。","😊"],
+  [367,"について","について","expr","關於","日本について話します。","談論關於日本的事。","📌"],
+  [368,"日記","にっき","noun","日記","毎日日記を書きます。","每天寫日記。","📔"],
+  [369,"入院","にゅういん","noun","住院","病院に入院します。","住院。","🏥"],
+  [370,"入学式","にゅうがくしき","noun","入學典禮","入学式に出席します。","出席入學典禮。","🎓"],
+  [371,"によって","によって","expr","根據","人によって違います。","因人而異。","🔄"],
+  [372,"人形","にんぎょう","noun","玩偶","人形を集めます。","收集玩偶。","🪆"],
+  [373,"盗む","ぬすむ","verb","偷竊","物を盗んではいけません。","不可以偷東西。","🚫"],
+  [374,"温い","ぬるい","adj","溫溫的","お湯がぬるいです。","熱水有點溫。","🥱"],
+  [375,"濡れる","ぬれる","verb","弄濕","雨に濡れました。","被雨淋濕了。","☔"],
+  [376,"値段","ねだん","noun","價格","値段を確認します。","確認價格。","💴"],
+  [377,"熱","ねつ","noun","發燒","熱が出ました。","發燒了。","🌡️"],
+  [378,"熱心","ねっしん","adj","熱心的","熱心に勉強します。","認真學習。","🔥"],
+  [379,"寝坊","ねぼう","noun","睡過頭","今日は寝坊しました。","今天睡過頭了。","😴"],
+  [380,"眠い","ねむい","adj","想睡的","眠いです。","想睡覺。","😪"],
+  [381,"残る","のこる","verb","剩下","お金が残ります。","錢剩下來了。","💰"],
+  [382,"乗り換える","のりかえる","verb","轉車","渋谷で乗り換えます。","在澀谷轉車。","🚇"],
+  [383,"歯医者","はいしゃ","noun","牙醫","歯医者に行きます。","去看牙醫。","🦷"],
+  [384,"入る","はいる","verb","進入","部屋に入ります。","進入房間。","🚪"],
+  [385,"履く","はく","verb","穿（鞋）","靴を履きます。","穿鞋子。","👟"],
+  [386,"箱","はこ","noun","箱子","箱に入れます。","放入箱子。","📦"],
+  [387,"運ぶ","はこぶ","verb","搬運","荷物を運びます。","搬運行李。","🧳"],
+  [388,"箸","はし","noun","筷子","箸でご飯を食べます。","用筷子吃飯。","🥢"],
+  [389,"場所","ばしょ","noun","地點","場所を決めます。","決定地點。","📍"],
+  [390,"バス停","ばすてい","noun","公車站","バス停で待ちます。","在公車站等待。","🚌"],
+  [391,"働く","はたらく","verb","工作","毎日働きます。","每天工作。","💼"],
+  [392,"葉っぱ","はっぱ","noun","樹葉","葉っぱが落ちます。","樹葉掉落。","🍃"],
+  [393,"花見","はなみ","noun","賞花","花見をします。","去賞花。","🌸"],
+  [394,"花屋","はなや","noun","花店","花屋で花を買います。","在花店買花。","💐"],
+  [395,"払う","はらう","verb","支付","お金を払います。","付錢。","💴"],
+  [396,"貼る","はる","verb","貼上","ポスターを貼ります。","貼海報。","📌"],
+  [397,"晴れ","はれ","noun","晴天","今日は晴れです。","今天是晴天。","☀️"],
+  [398,"ハンカチ","ハンカチ","noun","手帕","ハンカチを持ちます。","帶手帕。","🧣"],
+  [399,"反対","はんたい","noun","反對","反対意見があります。","有反對意見。","👎"],
+  [400,"パンツ","パンツ","noun","褲子","パンツを履きます。","穿褲子。","👖"],
+  [401,"ピアニスト","ピアニスト","noun","鋼琴家","ピアニストになりたいです。","想成為鋼琴家。","🎹"],
+  [402,"ピアノ","ピアノ","noun","鋼琴","ピアノを弾きます。","彈鋼琴。","🎹"],
+  [403,"冷える","ひえる","verb","變冷","体が冷えました。","身體變冷了。","🥶"],
+  [404,"引く","ひく","verb","拉","ドアを引きます。","拉門。","🚪"],
+  [405,"非常に","ひじょうに","adv","非常","非常に大切です。","非常重要。","🔥"],
+  [406,"左","ひだり","noun","左邊","左に曲がります。","往左轉。","⬅️"],
+  [407,"びっくり","びっくり","adv","嚇一跳","びっくりしました！","嚇了一跳！","😱"],
+  [408,"引っ越す","ひっこす","verb","搬家","来月引っ越します。","下個月搬家。","📦"],
+  [409,"必要","ひつよう","adj","必要的","お金が必要です。","需要錢。","❗"],
+  [410,"ビデオ","ビデオ","noun","影片","ビデオを撮ります。","拍影片。","🎥"],
+  [411,"紐","ひも","noun","繩子","紐で縛ります。","用繩子綁。","🧶"],
+  [412,"昼寝","ひるね","noun","午睡","昼寝をします。","午睡。","😴"],
+  [413,"拾う","ひろう","verb","撿起","ゴミを拾います。","撿垃圾。","🗑️"],
+  [414,"瓶","びん","noun","瓶子","瓶に入れます。","放入瓶子。","🍾"],
+  [415,"ファクス","ファクス","noun","傳真","ファクスを送ります。","發傳真。","📠"],
+  [416,"封筒","ふうとう","noun","信封","封筒に入れます。","放入信封。","✉️"],
+  [417,"プール","プール","noun","游泳池","プールで泳ぎます。","在游泳池游泳。","🏊"],
+  [418,"増える","ふえる","verb","增加","人口が増えます。","人口增加。","📈"],
+  [419,"深い","ふかい","adj","深的","川が深いです。","河流很深。","🌊"],
+  [420,"復習","ふくしゅう","noun","複習","授業の復習をします。","複習上課內容。","📚"],
+  [421,"袋","ふくろ","noun","袋子","袋に入れます。","放入袋子。","🛍️"],
+  [422,"部長","ぶちょう","noun","部長","部長に報告します。","向部長報告。","👔"],
+  [423,"太い","ふとい","adj","粗的","この木は太いです。","這棵樹很粗。","🌳"],
+  [424,"太る","ふとる","verb","變胖","太りたくないです。","不想變胖。","😅"],
+  [425,"船","ふね","noun","船","船で島に行きます。","搭船去島上。","🚢"],
+  [426,"不便","ふべん","adj","不方便的","交通が不便です。","交通不便。","🚌"],
+  [427,"踏む","ふむ","verb","踩","花を踏まないでください。","請不要踩花。","👣"],
+  [428,"プレゼント","プレゼント","noun","禮物","プレゼントを渡します。","送禮物。","🎁"],
+  [429,"文化","ぶんか","noun","文化","日本文化を学びます。","學習日本文化。","🎭"],
+  [430,"平日","へいじつ","noun","平日","平日に行きます。","平日去。","📅"],
+  [431,"下手","へた","adj","不擅長的","料理が下手です。","不擅長料理。","😅"],
+  [432,"ベッド","ベッド","noun","床","ベッドで寝ます。","在床上睡覺。","🛏️"],
+  [433,"ペット","ペット","noun","寵物","ペットを飼います。","養寵物。","🐶"],
+  [434,"返事","へんじ","noun","回覆","返事をください。","請給我回覆。","📨"],
+  [435,"貿易","ぼうえき","noun","貿易","貿易会社に勤めています。","在貿易公司工作。","🌍"],
+  [436,"ボール","ボール","noun","球","ボールを投げます。","投球。","⚽"],
+  [437,"他","ほか","noun","其他","他にもあります。","還有其他的。","➕"],
+  [438,"僕","ぼく","noun","我（男）","僕は学生です。","我是學生。","👦"],
+  [439,"星","ほし","noun","星星","星が綺麗です。","星星很美。","⭐"],
+  [440,"ポスター","ポスター","noun","海報","ポスターを貼ります。","貼海報。","📌"],
+  [441,"ポスト","ポスト","noun","郵筒","ポストに投函します。","投入郵筒。","📮"],
+  [442,"ボタン","ボタン","noun","按鈕","ボタンを押します。","按按鈕。","🔘"],
+  [443,"ポチ","ポチ","noun","（狗名）","ポチは元気です。","小黑很有活力。","🐶"],
+  [444,"褒める","ほめる","verb","稱讚","先生に褒められました。","被老師稱讚了。","👏"],
+  [445,"本棚","ほんだな","noun","書架","本棚に本を並べます。","把書排在書架上。","📚"],
+  [446,"本当","ほんとう","adj","真的","本当ですか？","是真的嗎？","😮"],
+  [447,"曲がる","まがる","verb","轉彎","角を曲がります。","在轉角轉彎。","↩️"],
+  [448,"巻き寿司","まきすし","noun","壽司捲","巻き寿司を作ります。","做壽司捲。","🍱"],
+  [449,"真面目","まじめ","adj","認真的","真面目な学生です。","是個認真的學生。","📚"],
+  [450,"まだ","まだ","adv","還・尚未","まだ終わっていません。","還沒結束。","⏳"],
+  [451,"間違う","まちがう","verb","弄錯（自）","間違いました。","弄錯了。","❌"],
+  [452,"間違える","まちがえる","verb","弄錯（他）","答えを間違えました。","答錯了。","❌"],
+  [453,"祭り","まつり","noun","祭典","お祭りに行きます。","去祭典。","🎉"],
+  [454,"まで","まで","expr","到…為止","駅まで歩きます。","走到車站。","🚶"],
+  [455,"までに","までに","expr","在…之前","5時までに帰ります。","5點之前回去。","⏰"],
+  [456,"窓","まど","noun","窗戶","窓を開けます。","打開窗戶。","🪟"],
+  [457,"マナー","マナー","noun","禮節","マナーを守ります。","遵守禮節。","🙏"],
+  [458,"間に合う","まにあう","verb","來得及","電車に間に合いました。","趕上電車了。","🚇"],
+  [459,"丸い","まるい","adj","圓的","地球は丸いです。","地球是圓的。","🌍"],
+  [460,"周り","まわり","noun","周圍","周りを見ます。","看看周圍。","👀"],
+  [461,"漫画","まんが","noun","漫畫","漫画を読みます。","看漫畫。","📖"],
+  [462,"マンション","マンション","noun","公寓大廈","マンションに住みます。","住在公寓大廈。","🏢"],
+  [463,"右","みぎ","noun","右邊","右に曲がります。","往右轉。","➡️"],
+  [464,"見せる","みせる","verb","給看","写真を見せます。","給看照片。","📸"],
+  [465,"道","みち","noun","道路","この道をまっすぐ行きます。","沿著這條路直走。","🛤️"],
+  [466,"見つかる","みつかる","verb","被找到","財布が見つかりました。","錢包找到了。","👛"],
+  [467,"見つける","みつける","verb","找到","お店を見つけました。","找到了店。","🔍"],
+  [468,"港","みなと","noun","港口","港に船が来ます。","船來到港口。","⚓"],
+  [469,"迎える","むかえる","verb","迎接","空港で迎えます。","在機場迎接。","✈️"],
+  [470,"息子","むすこ","noun","兒子","息子が生まれました。","兒子出生了。","👦"],
+  [471,"娘","むすめ","noun","女兒","娘は学生です。","女兒是學生。","👧"],
+  [472,"もう","もう","adv","已經","もう終わりました。","已經結束了。","✅"],
+  [473,"もうすぐ","もうすぐ","adv","很快就要","もうすぐ春です。","很快就要春天了。","🌸"],
+  [474,"もっと","もっと","adv","更加","もっと練習します。","更加練習。","📈"],
+  [475,"最も","もっとも","adv","最","最も大切なことです。","是最重要的事。","🏆"],
+  [476,"戻る","もどる","verb","返回","家に戻ります。","回家。","🏠"],
+  [477,"八百屋","やおや","noun","蔬果店","八百屋で野菜を買います。","在蔬果店買蔬菜。","🥦"],
+  [478,"野球","やきゅう","noun","棒球","野球を見ます。","看棒球。","⚾"],
+  [479,"約束","やくそく","noun","約定","約束を守ります。","遵守約定。","🤝"],
+  [480,"野菜","やさい","noun","蔬菜","野菜を食べます。","吃蔬菜。","🥦"],
+  [481,"やっと","やっと","adv","終於","やっと終わりました。","終於結束了。","😮‍💨"],
+  [482,"止む","やむ","verb","停止（雨）","雨が止みました。","雨停了。","🌈"],
+  [483,"止める","やめる","verb","停止・辭","仕事を止めます。","辭掉工作。","✋"],
+  [484,"やり方","やりかた","noun","做法","やり方を教えます。","教做法。","📋"],
+  [485,"夕方","ゆうがた","noun","傍晚","夕方に帰ります。","傍晚回去。","🌆"],
+  [486,"夕食","ゆうしょく","noun","晚餐","夕食を食べます。","吃晚餐。","🍽️"],
+  [487,"浴衣","ゆかた","noun","浴衣","お祭りで浴衣を着ます。","在祭典穿浴衣。","👘"],
+  [488,"輸出","ゆしゅつ","noun","出口（貿易）","車を輸出します。","出口汽車。","🚗"],
+  [489,"ゆっくり","ゆっくり","adv","慢慢地","ゆっくり話してください。","請慢慢說。","🐢"],
+  [490,"輸入","ゆにゅう","noun","進口（貿易）","食品を輸入します。","進口食品。","📦"],
+  [491,"指","ゆび","noun","手指","指を切りました。","切到手指了。","👆"],
+  [492,"用意","ようい","noun","準備","用意ができました。","準備好了。","✅"],
+  [493,"用事","ようじ","noun","事情","用事があります。","有事情。","📋"],
+  [494,"洋服","ようふく","noun","服裝","洋服を買います。","買衣服。","👗"],
+  [495,"ヨーグルト","ヨーグルト","noun","優格","朝にヨーグルトを食べます。","早上吃優格。","🥛"],
+  [496,"ヨーロッパ","ヨーロッパ","noun","歐洲","ヨーロッパに旅行します。","去歐洲旅行。","🌍"],
+  [497,"よく","よく","adv","經常","よく食べます。","經常吃。","😊"],
+  [498,"汚れる","よごれる","verb","變髒","服が汚れました。","衣服弄髒了。","👕"],
+  [499,"よかった","よかった","expr","太好了","よかった！","太好了！","🎉"],
+  [500,"呼ぶ","よぶ","verb","叫","タクシーを呼びます。","叫計程車。","🚕"],
+  [501,"予報","よほう","noun","預報","天気予報を見ます。","看天氣預報。","⛅"],
+  [502,"予約","よやく","noun","預約","レストランを予約します。","預約餐廳。","📅"],
+  [503,"より","より","expr","比（比較）","今日は昨日より暑いです。","今天比昨天熱。","🌡️"],
+  [504,"寄る","よる","verb","順道","コンビニに寄ります。","順便去便利商店。","🏪"],
+  [505,"喜ぶ","よろこぶ","verb","高興","プレゼントをもらって喜びます。","收到禮物很高興。","😄"],
+  [506,"弱い","よわい","adj","弱的","体が弱いです。","身體很弱。","😔"],
+  [507,"理由","りゆう","noun","理由","理由を教えてください。","請告訴我理由。","❓"],
+  [508,"利用","りよう","noun","使用","バスを利用します。","使用公車。","🚌"],
+  [509,"料金","りょうきん","noun","費用","料金を払います。","支付費用。","💴"],
+  [510,"両方","りょうほう","noun","兩方","両方好きです。","兩個都喜歡。","👐"],
+  [511,"旅館","りょかん","noun","日式旅館","旅館に泊まります。","住日式旅館。","🏯"],
+  [512,"旅行","りょこう","noun","旅行","旅行が好きです。","喜歡旅行。","✈️"],
+  [513,"ルール","ルール","noun","規則","ルールを守ります。","遵守規則。","📋"],
+  [514,"冷蔵庫","れいぞうこ","noun","冰箱","冷蔵庫に入れます。","放進冰箱。","🧊"],
+  [515,"歴史","れきし","noun","歷史","日本の歴史を学びます。","學習日本歷史。","📜"],
+  [516,"レジ","レジ","noun","收銀台","レジで払います。","在收銀台付款。","🏪"],
+  [517,"レポート","レポート","noun","報告","レポートを書きます。","寫報告。","📝"],
+  [518,"練習","れんしゅう","noun","練習","毎日練習します。","每天練習。","🔄"],
+  [519,"連絡","れんらく","noun","聯絡","連絡してください。","請聯絡我。","📱"],
+  [520,"廊下","ろうか","noun","走廊","廊下を歩きます。","走過走廊。","🚶"],
+  [521,"ロボット","ロボット","noun","機器人","ロボットを作ります。","製作機器人。","🤖"],
+  [522,"若い","わかい","adj","年輕的","若い人が多いです。","年輕人很多。","👦"],
+  [523,"沸かす","わかす","verb","燒開水","お湯を沸かします。","燒開水。","♨️"],
+  [524,"和食","わしょく","noun","日本料理","和食が好きです。","喜歡日本料理。","🍱"],
+  [525,"忘れ物","わすれもの","noun","忘記的東西","忘れ物に気をつけてください。","請注意不要忘記東西。","😱"],
+  [526,"渡す","わたす","verb","遞交","書類を渡します。","遞交文件。","📄"],
+  [527,"笑う","わらう","verb","笑","みんなで笑います。","大家一起笑。","😄"],
+  [528,"割る","わる","verb","打破","コップを割りました。","打破了杯子。","💥"],
+  [529,"にんじん","にんじん","noun","胡蘿蔔","にんじんを食べます。","吃胡蘿蔔。","🥕"],
+  [530,"じゅうぶん","じゅうぶん","adj","充分的","じゅうぶんあります。","已經足夠了。","✅"],
+  [531,"カタカナ","カタカナ","noun","片假名","カタカナを覚えます。","記住片假名。","🔤"],
+  [532,"ひらがな","ひらがな","noun","平假名","ひらがなを書きます。","寫平假名。","🔤"],
+  [533,"すいか","すいか","noun","西瓜","夏にすいかを食べます。","夏天吃西瓜。","🍉"],
+  [534,"たまご","たまご","noun","雞蛋","たまごを料理します。","料理雞蛋。","🥚"],
+  [535,"いもうと","いもうと","noun","妹妹","いもうとは高校生です。","妹妹是高中生。","👧"],
+  [536,"ところ","ところ","noun","地方","いいところですね。","是個好地方呢。","📍"],
+  [537,"洋食","ようしょく","noun","西式料理","洋食を食べます。","吃西式料理。","🍝"],
+  [538,"いちご","いちご","noun","草莓","いちごが好きです。","喜歡草莓。","🍓"],
+  [539,"まっすぐ","まっすぐ","adv","直走","まっすぐ行ってください。","請直走。","⬆️"],
+  [540,"おきる","おきる","verb","起床","朝早く起きます。","早上早起。","⏰"],
+  [541,"かぶる","かぶる","verb","戴（帽子）","帽子をかぶります。","戴帽子。","🎩"],
+  [542,"とじる","とじる","verb","關閉","目をとじます。","閉上眼睛。","👁️"],
+  [543,"しめる","しめる","verb","關（門）","ドアをしめます。","關門。","🚪"],
+  [544,"ぼうし","ぼうし","noun","帽子","ぼうしをかぶります。","戴帽子。","🎩"],
+  [545,"いす","いす","noun","椅子","いすに座ります。","坐在椅子上。","🪑"],
+  [546,"みなと","みなと","noun","港口","みなとに行きます。","去港口。","⚓"],
+  [547,"みずうみ","みずうみ","noun","湖","みずうみで泳ぎます。","在湖裡游泳。","🌊"],
+  [548,"ひらく","ひらく","verb","打開（自）","ドアがひらきます。","門打開了。","🚪"],
+  [549,"おく","おく","verb","放置","机の上におきます。","放在桌子上。","🪑"],
+  [550,"かう","かう","verb","飼養","犬をかいます。","養狗。","🐶"],
+  [551,"まんが","まんが","noun","漫畫","まんがを読みます。","看漫畫。","📖"],
+  [552,"みどり","みどり","noun","綠色","みどりの葉っぱです。","是綠色的葉子。","🟢"],
+  [553,"きょうみ","きょうみ","noun","興趣","きょうみがあります。","有興趣。","✨"],
+  [554,"なんで","なんで","adv","為什麼（口）","なんで来たの？","為什麼來了？","❓"],
+  [555,"なにも","なにも","adv","什麼都不","なにも食べません。","什麼都不吃。","🚫"],
+  [556,"でも","でも","adv","但是","でも、できません。","但是，做不到。","🔄"],
+  [557,"それでは","それでは","expr","那麼","それでは、始めましょう。","那麼，我們開始吧。","▶️"],
+  [558,"それに","それに","expr","而且","それに、便利です。","而且，很方便。","➕"],
+  [559,"例えば","たとえば","adv","例如","例えば、りんごです。","例如，蘋果。","📌"],
+  [560,"それなら","それなら","expr","那樣的話","それなら大丈夫です。","那樣的話沒問題。","👍"],
+  [561,"クレジットカード","クレジットカード","noun","信用卡","クレジットカードで払います。","用信用卡付款。","💳"],
+  [562,"どうぞ","どうぞ","expr","請","どうぞ、入ってください。","請進。","🙏"],
+  [563,"レインコート","レインコート","noun","雨衣","レインコートを着ます。","穿雨衣。","🧥"],
+  [564,"メートル","メートル","noun","公尺","100メートル走ります。","跑100公尺。","📏"],
+  [565,"まっすぐ","まっすぐ","adv","直走","まっすぐ行きます。","直走。","⬆️"],
+  // ── 程度副詞 ──
+  [566,"かなり","かなり","adv","相當","この本はかなり面白いです。","這本書相當有趣。","📈"],
+  [567,"けっこう","けっこう","adv","頗為・蠻","このレストランはけっこう美味しいです。","這家餐廳蠻好吃的。","👌"],
+  [568,"ずいぶん","ずいぶん","adv","非常（超乎預期）","今日はずいぶん寒いですね。","今天真的非常冷呢。","🥶"],
+  [569,"たしかに","たしかに","adv","的確・確實","彼の言うことはたしかに正しいです。","他說的確實沒錯。","✔️"],
+  [570,"たいてい","たいてい","adv","大多時候","日曜日はたいてい家にいます。","星期天大多時候我都待在家。","🏠"],
+  [571,"ほとんど","ほとんど","adv","幾乎","宿題はほとんど終わりました。","作業幾乎都寫完了。","💯"],
+  [572,"このごろ","このごろ","adv","近來","このごろ、よく雨が降ります。","近來經常下雨。","🌧️"],
+  [573,"まず","まず","adv","首先","まず、手を洗ってください。","首先，請洗手。","1️⃣"],
+  [574,"しっかり","しっかり","adv","確實・穩固","ドアをしっかり閉めてください。","請確實把門關好。","💪"],
+  [575,"はっきり","はっきり","adv","清楚・明確","もっとはっきり言ってください。","請說得更清楚一點。","🔍"],
+  [576,"もちろん","もちろん","adv","當然","明日のパーティー、もちろん行きますよ。","明天的派對，我當然會去喔。","😄"],
+  [577,"なるべく","なるべく","adv","盡可能","なるべく早く来てください。","請盡可能早點來。","🏃"],
+  [578,"ちゃんと","ちゃんと","adv","好好地","毎日ちゃんと野菜を食べていますか。","每天都有好好吃蔬菜嗎？","✅"],
+  // ── い形容詞 ──
+  [579,"うれしい","うれしい","adj","高興的","うれしい知らせがありました。","有高興的消息。","😄"],
+  [580,"かなしい","かなしい","adj","悲傷的","かなしい映画を見ました。","看了悲傷的電影。","😢"],
+  [581,"すばらしい","すばらしい","adj","很棒的","すばらしい景色ですね。","是絕佳的景色呢。","🌟"],
+  [582,"詳しい","くわしい","adj","詳細的","詳しい説明をします。","給予詳細的說明。","📋"],
+  [583,"優しい","やさしい","adj","溫柔的","優しい人が好きです。","喜歡溫柔的人。","💕"],
+  [584,"細い","ほそい","adj","細的・瘦的","細い糸を使います。","使用細線。","🧵"],
+  // ── な形容詞 ──
+  [585,"急な","きゅうな","adj","突然的","急な用事ができました。","有突然的急事。","⚡"],
+  [586,"自由","じゆう","adj","自由的","自由な時間があります。","有自由的時間。","🕊️"],
+  [587,"安全","あんぜん","adj","安全的","安全な場所です。","是安全的地方。","🛡️"],
+  [588,"便利","べんり","adj","方便的","便利な道具です。","是方便的工具。","🔧"],
+  [589,"特別","とくべつ","adj","特別的","特別な日です。","是特別的日子。","✨"],
+  [590,"盛ん","さかん","adj","盛行的","盛んなスポーツです。","是盛行的運動。","🔥"],
+];
+
+const POS_MAP = {
+  noun: {label:"名詞", cls:"pos-noun"},
+  verb: {label:"動詞", cls:"pos-verb"},
+  adj:  {label:"形容詞", cls:"pos-adj"},
+  adv:  {label:"副詞/接", cls:"pos-adv"},
+  expr: {label:"慣用/表達", cls:"pos-expr"},
+  other:{label:"其他", cls:"pos-other"}
+};
+
+let allCards = raw.map(r => ({
+  id: r[0], kanji: r[1], kana: r[2], pos: r[3],
+  zh: r[4], exJp: r[5], exZh: r[6], emoji: r[7],
+  know: false, miss: 0, star: false
+}));
+
+let filtered = [...allCards];
+let idx = 0;
+let isFlipped = false;
+let currentFilter = 'all';
+let fontState = 0;
+let touchStartX = 0;
+
+function getFiltered() {
+  if (currentFilter === 'all') return allCards;
+  if (currentFilter === 'star') return allCards.filter(c => c.star);
+  return allCards.filter(c => c.pos === currentFilter);
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  filtered = getFiltered();
+  idx = 0;
+  renderCard(true);
+}
+
+function renderCard(animate) {
+  if (!filtered.length) return;
+  const c = filtered[idx];
+  isFlipped = false;
+  const card = document.getElementById('main-card');
+  card.classList.remove('flipped');
+  card.setAttribute('data-pos', c.pos);
+
+  document.getElementById('c-num').textContent = `#${c.id}`;
+  document.getElementById('c-num2').textContent = `#${c.id}`;
+  // 正面：只顯示假名
+  document.getElementById('c-kana').textContent = c.kana;
+  document.getElementById('c-emoji').textContent = c.emoji || '';
+  // 背面：漢字＋假名＋中文＋例句
+  document.getElementById('c-kanji').textContent = c.kanji !== c.kana ? c.kanji : '';
+  document.getElementById('c-kana-back').textContent = c.kanji !== c.kana ? c.kana : '';
+  document.getElementById('c-meaning').textContent = c.zh;
+  document.getElementById('c-example').innerHTML = `<div class="jp">${c.exJp}</div><div>${c.exZh}</div>`;
+  document.getElementById('c-star').textContent = c.star ? '⭐' : '☆';
+  document.getElementById('c-miss').textContent = c.miss >= 5 ? '⭐'.repeat(Math.min(c.miss-4,3)) + ' 需加強' : (c.miss > 0 ? `✗ ×${c.miss}` : '');
+
+  const pm = POS_MAP[c.pos] || POS_MAP.other;
+  document.getElementById('c-pos-front').textContent = pm.label;
+  document.getElementById('c-pos-front').className = 'pos-badge ' + pm.cls;
+  document.getElementById('c-pos-back').textContent = pm.label;
+  document.getElementById('c-pos-back').className = 'pos-badge ' + pm.cls;
+
+  document.getElementById('nav-idx').textContent = idx + 1;
+  document.getElementById('nav-total').textContent = '/ ' + filtered.length;
+  const pct = filtered.length > 1 ? (idx / (filtered.length-1)) * 100 : 100;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  updateStats();
+
+  if (animate) {
+    card.classList.add('slide-in-right');
+    setTimeout(() => card.classList.remove('slide-in-right'), 300);
+  }
+}
+
+function flipCard() {
+  const card = document.getElementById('main-card');
+  isFlipped = !isFlipped;
+  card.classList.toggle('flipped', isFlipped);
+}
+
+function nextCard() {
+  if (!filtered.length) return;
+  idx = (idx + 1) % filtered.length;
+  renderCard(true);
+}
+
+function prevCard() {
+  if (!filtered.length) return;
+  idx = (idx - 1 + filtered.length) % filtered.length;
+  const card = document.getElementById('main-card');
+  isFlipped = false;
+  card.classList.remove('flipped');
+  renderCard(false);
+  card.classList.add('slide-in-left');
+  setTimeout(() => card.classList.remove('slide-in-left'), 300);
+}
+
+function markKnow() {
+  allCards[filtered[idx].id-1].know = true;
+  filtered[idx].know = true;
+  nextCard();
+}
+
+function markMiss() {
+  allCards[filtered[idx].id-1].miss++;
+  filtered[idx].miss++;
+  if (filtered[idx].miss >= 5) {
+    allCards[filtered[idx].id-1].star = true;
+    filtered[idx].star = true;
+  }
+  nextCard();
+}
+
+function toggleStar() {
+  const c = filtered[idx];
+  c.star = !c.star;
+  allCards[c.id-1].star = c.star;
+  document.getElementById('c-star').textContent = c.star ? '⭐' : '☆';
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('s-know').textContent = allCards.filter(c=>c.know).length;
+  document.getElementById('s-miss').textContent = allCards.filter(c=>c.miss>0&&!c.know).length;
+  document.getElementById('s-star').textContent = allCards.filter(c=>c.star).length;
+}
+
+function shuffleCards() {
+  filtered = [...getFiltered()].sort(() => Math.random()-0.5);
+  idx = 0;
+  renderCard(true);
+}
+
+function resetAll() {
+  allCards.forEach(c => { c.know=false; c.miss=0; c.star=false; });
+  filtered = getFiltered();
+  idx = 0;
+  renderCard(true);
+  updateStats();
+}
+
+function toggleFont() {
+  fontState = (fontState+1) % 3;
+  document.body.classList.remove('font-lg','font-sm');
+  if (fontState===1) document.body.classList.add('font-lg');
+  else if (fontState===2) document.body.classList.add('font-sm');
+}
+
+function touchStart(e) { touchStartX = e.touches[0].clientX; }
+function touchEnd(e) {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) {
+    if (dx < 0) nextCard();
+    else prevCard();
+  }
+}
+
+renderCard(false);
+</script>
 </body>
 </html>

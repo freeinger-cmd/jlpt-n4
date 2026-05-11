@@ -44,6 +44,8 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
 .card-wrap{padding:0 16px;perspective:1000px;}
 .card-inner{position:relative;width:100%;height:260px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1);cursor:pointer;border-radius:20px;}
 .card-inner.flipped{transform:rotateY(180deg);}
+.card-inner.flipping .card-back{visibility:hidden;}
+.card-inner.flipping.flipped .card-back{visibility:visible;}
 .card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1a1a35 0%,#13132a 100%);border:1px solid #2a2a4a;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
 .card-back{transform:rotateY(180deg);}
 .c-tag{font-size:11px;border-radius:20px;padding:3px 10px;font-weight:700;margin-bottom:8px;}
@@ -795,6 +797,7 @@ function speak(text){
 let section='vocab',activeTag='all',vMode='flash';
 let pool=[...VOCAB],vi=0,vFlipped=false;
 let vKnown=new Set(),vForgot=new Set(),vHistory=[];
+let vMissCount={}; // 記錄每個單字不熟次數
 let qPool=[],qi=0,qAnswered=false;
 let kPool=[],ki=0,kFlipped=false;
 let kKnown=new Set(),kForgot=new Set(),kHistory=[];
@@ -804,8 +807,8 @@ let lPool=[],li=0,lHistory=[];
 let lKnown=new Set(),lForgot=new Set();
 let rTab='vocab';
 
-function save(){try{localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));localStorage.setItem('n4_vF',JSON.stringify([...vForgot]));localStorage.setItem('n4_kK',JSON.stringify([...kKnown]));localStorage.setItem('n4_kF',JSON.stringify([...kForgot]));localStorage.setItem('n4_lK',JSON.stringify([...lKnown]));localStorage.setItem('n4_lF',JSON.stringify([...lForgot]));}catch(e){}}
-function load(){try{const vk=localStorage.getItem('n4_vK');if(vk)vKnown=new Set(JSON.parse(vk));const vf=localStorage.getItem('n4_vF');if(vf)vForgot=new Set(JSON.parse(vf));const kk=localStorage.getItem('n4_kK');if(kk)kKnown=new Set(JSON.parse(kk));const kf=localStorage.getItem('n4_kF');if(kf)kForgot=new Set(JSON.parse(kf));const lk=localStorage.getItem('n4_lK');if(lk)lKnown=new Set(JSON.parse(lk));const lf=localStorage.getItem('n4_lF');if(lf)lForgot=new Set(JSON.parse(lf));}catch(e){}}
+function save(){try{localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));localStorage.setItem('n4_vF',JSON.stringify([...vForgot]));localStorage.setItem('n4_mc',JSON.stringify(vMissCount));localStorage.setItem('n4_kK',JSON.stringify([...kKnown]));localStorage.setItem('n4_kF',JSON.stringify([...kForgot]));localStorage.setItem('n4_lK',JSON.stringify([...lKnown]));localStorage.setItem('n4_lF',JSON.stringify([...lForgot]));}catch(e){}}
+function load(){try{const vk=localStorage.getItem('n4_vK');if(vk)vKnown=new Set(JSON.parse(vk));const vf=localStorage.getItem('n4_vF');if(vf)vForgot=new Set(JSON.parse(vf));const mc=localStorage.getItem('n4_mc');if(mc)vMissCount=JSON.parse(mc);const kk=localStorage.getItem('n4_kK');if(kk)kKnown=new Set(JSON.parse(kk));const kf=localStorage.getItem('n4_kF');if(kf)kForgot=new Set(JSON.parse(kf));const lk=localStorage.getItem('n4_lK');if(lk)lKnown=new Set(JSON.parse(lk));const lf=localStorage.getItem('n4_lF');if(lf)lForgot=new Set(JSON.parse(lf));}catch(e){}}
 function resetAll(){if(!confirm('確定要重置所有進度嗎？'))return;[vKnown,vForgot,kKnown,kForgot,lKnown,lForgot].forEach(s=>s.clear());vHistory=[];kHistory=[];lHistory=[];vi=0;ki=0;li=0;try{localStorage.clear();}catch(e){}updateVStats();updateKStats();updateLStats();renderCard();renderKanaCard();}
 
 function setSection(s){
@@ -838,11 +841,36 @@ function renderCard(){
   const w=pool[vi];vFlipped=false;$('ci').classList.remove('flipped');
   $('vact').style.display='none';$('vflip').style.display='flex';$('vhint').style.display='block';
   $('vcnt').textContent=`${vi+1} / ${pool.length}`;
-  $('cfront').innerHTML=`${tagH(w)}<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div><div class="c-jp" style="font-size:36px;letter-spacing:4px">${w.rd}</div><div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
+  $('cfront').innerHTML=`${tagH(w)}<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div><div class="c-jp" style="font-size:36px;letter-spacing:4px">${w.rd}</div>${vMissCount[w.rd]?`<div style="font-size:12px;color:#f76a6a;margin-top:8px">${w.star?'⭐':''}不熟 ×${vMissCount[w.rd]}</div>`:''}<div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:0.5rem">點擊翻面確認漢字</div>`;
   $('cback').innerHTML=`${tagH(w)}<div class="c-jp" style="font-size:28px">${w.jp}</div><div class="c-rd">${w.rd}</div><div class="c-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div><div class="ex-text">例：${w.ex}</div>`;
 }
-function flipCard(){vFlipped=!vFlipped;$('ci').classList.toggle('flipped',vFlipped);if(vFlipped){$('vact').style.display='flex';$('vflip').style.display='none';$('vhint').style.display='none';}}
-function vAns(ok){vHistory.push({idx:vi,ok});if(ok)vKnown.add(vi);else vForgot.add(vi);vi++;updateVStats();save();renderCard();}
+function flipCard(){
+  const card=$('ci');
+  card.classList.add('flipping');
+  vFlipped=!vFlipped;
+  card.classList.toggle('flipped',vFlipped);
+  setTimeout(()=>card.classList.remove('flipping'),500);
+  if(vFlipped){$('vact').style.display='flex';$('vflip').style.display='none';$('vhint').style.display='none';}
+}
+function vAns(ok){
+  vHistory.push({idx:vi,ok});
+  if(ok){vKnown.add(vi);}
+  else{
+    vForgot.add(vi);
+    const key=pool[vi].rd;
+    vMissCount[key]=(vMissCount[key]||0)+1;
+    if(vMissCount[key]>=5){
+      pool[vi].star=true;
+      // 顯示提示
+      const tip=document.createElement('div');
+      tip.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#f7c46a;color:#000;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;';
+      tip.textContent='⭐ 已加入星號重點單字！';
+      document.body.appendChild(tip);
+      setTimeout(()=>tip.remove(),2000);
+    }
+  }
+  vi++;updateVStats();save();renderCard();
+}
 function vPrev(){if(vi===0)return;const last=vHistory.pop();if(last){if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);}vi--;vFlipped=false;updateVStats();renderCard();}
 function updateVStats(){const t=vKnown.size+vForgot.size;$('sv-t').textContent=t;$('sv-k').textContent=vKnown.size;$('sv-f').textContent=vForgot.size;$('vp').style.width=Math.round((t/Math.max(pool.length,1))*100)+'%';}
 function speakCurrent(){if(vi<pool.length)speak(pool[vi].rd);}
@@ -862,7 +890,14 @@ function renderKanaCard(){
   $('kfront').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:0.5rem">這個讀音對應哪個漢字？</div><div class="c-jp" style="font-size:40px;letter-spacing:4px">${w.rd}</div><div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
   $('kback').innerHTML=`${tagH(w)}<div class="c-jp" style="font-size:28px">${w.jp}</div><div class="c-rd">${w.rd}</div><div class="c-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div><div class="ex-text">例：${w.ex}</div>`;
 }
-function flipKana(){kFlipped=!kFlipped;$('kci').classList.toggle('flipped',kFlipped);if(kFlipped){$('kact').style.display='flex';$('kflip').style.display='none';$('khint').style.display='none';}}
+function flipKana(){
+  const card=$('kci');
+  card.classList.add('flipping');
+  kFlipped=!kFlipped;
+  card.classList.toggle('flipped',kFlipped);
+  setTimeout(()=>card.classList.remove('flipping'),500);
+  if(kFlipped){$('kact').style.display='flex';$('kflip').style.display='none';$('khint').style.display='none';}
+}
 function kAns(ok){kHistory.push({idx:ki,ok});if(ok)kKnown.add(ki);else kForgot.add(ki);ki++;updateKStats();save();renderKanaCard();}
 function kPrev(){if(ki===0)return;const last=kHistory.pop();if(last){if(last.ok)kKnown.delete(last.idx);else kForgot.delete(last.idx);}ki--;kFlipped=false;updateKStats();renderKanaCard();}
 function updateKStats(){const t=kKnown.size+kForgot.size;$('sk-t').textContent=t;$('sk-k').textContent=kKnown.size;$('sk-f').textContent=kForgot.size;$('kp').style.width=Math.round((t/Math.max(kPool.length,1))*100)+'%';}

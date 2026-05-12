@@ -3,64 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>日檢N4學習助手 Pro</title>
+<title>JLPT N4 學習助手 - Gemini 版</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans TC', sans-serif; background: #1a1a2e; color: #e8e8f0; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: #1a1a2e; color: #e8e8f0; min-height: 100vh; display: flex; flex-direction: column; }
   
-  /* 導航與選單 */
-  .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #16213e; border-bottom: 1px solid #2a2a4a; }
-  .top-nav h1 { font-size: 15px; }
-  .filter-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; background: #16213e; }
-  .tab { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; background: #2a2a4a; color: #aaa; }
-  .tab.active { background: #7c4dff; color: #fff; }
+  /* 頂部導航 */
+  .top-nav { padding: 15px; background: #16213e; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between; align-items: center; }
+  .top-nav h1 { font-size: 16px; color: #ffd600; }
+  .count-info { font-size: 12px; color: #888; }
 
   /* 模式切換 */
-  .mode-toggle { display: flex; margin: 10px 12px; background: #2a2a4a; border-radius: 8px; overflow: hidden; }
-  .mode-btn { flex: 1; padding: 10px; text-align: center; font-size: 14px; cursor: pointer; border: none; background: transparent; color: #aaa; }
-  .mode-btn.active { background: #7c4dff; color: #fff; font-weight: 600; }
-
-  /* 數據統計 */
-  .stats-row { display: flex; gap: 10px; padding: 0 12px; }
-  .stat-box { flex: 1; background: #16213e; border-radius: 10px; padding: 10px; text-align: center; }
-  .stat-num { font-size: 20px; font-weight: 700; }
-  .blue { color: #4fc3f7; } .green { color: #66bb6a; } .red { color: #ef5350; }
+  .mode-toggle { display: flex; margin: 12px; background: #2a2a4a; border-radius: 8px; overflow: hidden; }
+  .mode-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #aaa; cursor: pointer; transition: 0.3s; }
+  .mode-btn.active { background: #7c4dff; color: #fff; font-weight: bold; }
 
   /* 卡片區域 */
-  .card-area { margin: 15px 12px; perspective: 1000px; }
-  .card-inner { position: relative; width: 100%; min-height: 280px; transition: transform 0.6s; transform-style: preserve-3d; }
-  /* 關鍵修復：切換時移除動畫 */
-  .card-inner.no-anim { transition: none !important; }
+  .card-container { padding: 0 12px; perspective: 1000px; flex-grow: 1; display: flex; align-items: center; }
+  .card-inner { position: relative; width: 100%; height: 300px; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+  
+  /* 關鍵優化：防止切換時看到背面 */
+  .card-inner.no-transition { transition: none !important; }
   .card-inner.flipped { transform: rotateY(180deg); }
   
-  .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #16213e; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #2a2a4a; }
-  .card-back { transform: rotateY(180deg); }
+  .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 15px; background: #16213e; border: 1px solid #2a2a4a; display: flex; flex-direction: column; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+  .card-back { transform: rotateY(180deg); justify-content: center; align-items: center; text-align: center; }
 
-  /* UI 調整：不熟次數靠左 */
-  .unfamiliar-tracker { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 15px; width: 100%; }
+  /* 不熟次數追蹤 (靠左) */
+  .unfamiliar-tracker { display: flex; align-items: center; gap: 6px; margin-top: auto; }
   .unfamiliar-dots { display: flex; gap: 4px; }
-  .unfamiliar-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #ef5350; }
-  .unfamiliar-dot.filled { background: #ef5350; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #ef5350; }
+  .dot.filled { background: #ef5350; }
+  .dot-text { font-size: 12px; color: #ef5350; font-weight: bold; margin-left: 5px; }
 
-  .main-kana { font-size: 48px; text-align: center; margin: 20px 0; }
-  .back-kanji { font-size: 32px; color: #fff; text-align: center; }
-  .back-meaning { font-size: 20px; color: #4fc3f7; text-align: center; margin-top: 10px; }
+  /* 卡片內容樣式 */
+  .word-id { font-size: 12px; color: #444; margin-bottom: 10px; }
+  .main-kana { font-size: 45px; text-align: center; margin: auto 0; }
+  .back-kanji { font-size: 36px; margin-bottom: 10px; }
+  .back-meaning { font-size: 20px; color: #4fc3f7; }
 
-  /* 測驗模式選項 */
-  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 12px; }
-  .option-btn { background: #2a2a4a; border: 1px solid #3f3f5f; color: #fff; padding: 15px 10px; border-radius: 10px; cursor: pointer; font-size: 14px; }
-  .option-btn:active { background: #7c4dff; }
+  /* 測驗選項區 */
+  .quiz-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
+  .quiz-btn { background: #2a2a4a; color: #fff; border: 1px solid #3f3f5f; padding: 15px 5px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .quiz-btn:active { background: #7c4dff; }
 
   /* 控制按鈕 */
-  .action-row { display: flex; gap: 10px; padding: 10px 12px; }
-  .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
-  .btn-k { background: #1b3a2e; color: #66bb6a; }
-  .btn-u { background: #3a1b1b; color: #ef5350; }
-  
-  .nav-row { display: flex; justify-content: space-between; padding: 10px 12px; align-items: center; }
-  .nav-btn { background: #2a2a4a; color: #ccc; border: none; padding: 8px 15px; border-radius: 5px; }
+  .controls { padding: 12px; display: flex; gap: 10px; }
+  .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; }
+  .btn-known { background: #1b3a2e; color: #66bb6a; }
+  .btn-unf { background: #3a1b1b; color: #ef5350; }
+  .btn-known:active { background: #2e5a47; }
+  .btn-unf:active { background: #5a2e2e; }
 
-  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffd600; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; opacity: 0; transition: 0.3s; z-index: 1000; }
+  /* 導航按鈕 */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #16213e; }
+  .nav-link { color: #888; text-decoration: none; font-size: 13px; cursor: pointer; }
+
+  /* Toast 提示 */
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffd600; color: #000; padding: 10px 25px; border-radius: 25px; font-weight: bold; opacity: 0; transition: 0.3s; z-index: 999; pointer-events: none; }
   .toast.show { opacity: 1; }
 </style>
 </head>
@@ -69,56 +69,48 @@
 <div id="toast" class="toast"></div>
 
 <div class="top-nav">
-  <h1>日檢 N4 單字考場</h1>
-  <div id="statProgress" class="stat-num blue" style="font-size:14px">0/565</div>
+  <h1>N4 Vocabulary Pro</h1>
+  <div class="count-info" id="progText">0 / 565</div>
 </div>
-
-<div class="filter-tabs" id="filterTabs"></div>
 
 <div class="mode-toggle">
-  <button class="mode-btn active" onclick="setMode('card')">抽認卡</button>
-  <button class="mode-btn" onclick="setMode('quiz')">測驗模式</button>
+  <button id="mCard" class="mode-btn active" onclick="setMode('card')">抽認卡</button>
+  <button id="mQuiz" class="mode-btn" onclick="setMode('quiz')">測驗模式</button>
 </div>
 
-<div class="stats-row">
-  <div class="stat-box"><div class="stat-num green" id="statKnown">0</div><div style="font-size:10px">已掌握</div></div>
-  <div class="stat-box"><div class="stat-num red" id="statUnfamiliar">0</div><div style="font-size:10px">挑戰中</div></div>
-</div>
-
-<!-- 卡片區 -->
-<div class="card-area" id="cardContainer">
-  <div class="card-inner" id="cardInner" onclick="if(st.mode==='card') flipCard()">
-    <div class="card-face card-front">
-      <div style="font-size:12px; color:#555" id="numBadge">#1</div>
-      <div class="main-kana" id="mainKana">讀取中...</div>
+<div class="card-container">
+  <div id="cardInner" class="card-inner" onclick="handleCardClick()">
+    <!-- 正面 -->
+    <div class="card-face">
+      <div class="word-id" id="wordId">#1</div>
+      <div class="main-kana" id="mainKana">あいさつ</div>
       <div class="unfamiliar-tracker">
-        <div class="unfamiliar-dots" id="unfamiliarDots"></div>
-        <span style="font-size:10px; color:#666" id="unfamiliarCount">0/5</span>
+        <div class="unfamiliar-dots" id="dotBox"></div>
+        <span class="dot-text" id="dotCountText">0/5</span>
       </div>
-      <div style="text-align:center; font-size:11px; color:#444; margin-top:20px" id="hintText">點擊翻面</div>
     </div>
+    <!-- 背面 -->
     <div class="card-face card-back">
-      <div class="back-kanji" id="backKanji">漢字</div>
-      <div style="text-align:center; color:#888; font-size:14px" id="backKana">讀音</div>
-      <div class="back-meaning" id="backMeaning">中文意思</div>
+      <div class="back-kanji" id="backKanji">挨拶</div>
+      <div style="color:#aaa; margin-bottom:15px" id="backKana">あいさつ</div>
+      <div class="back-meaning" id="backMeaning">打招呼；問候</div>
     </div>
   </div>
 </div>
 
-<!-- 測驗選項 (預設隱藏) -->
-<div id="quizOptions" class="quiz-options" style="display:none"></div>
+<div id="quizArea" class="quiz-area" style="display:none"></div>
 
-<!-- 抽認卡按鈕 -->
-<div id="cardActions">
-    <div class="action-row">
-        <button class="btn btn-k" onclick="markKnown()">記住了</button>
-        <button class="btn btn-u" onclick="markUnfamiliar()">不熟</button>
-    </div>
-    <div class="nav-row">
-        <button class="nav-btn" onclick="prevCard()">← 上一張</button>
-        <button class="nav-btn" onclick="speakWord()">🔊 朗讀</button>
-        <button class="nav-btn" onclick="nextCard()">下一張 →</button>
-    </div>
+<div id="cardControls" class="controls">
+  <button class="btn btn-known" onclick="mark(true)">✓ 記住了</button>
+  <button class="btn btn-unf" onclick="mark(false)">✗ 不熟</button>
+</div>
+
+<div class="nav-bar">
+  <span class="nav-link" onclick="prev()">← 上一張</span>
+  <span class="nav-link" onclick="speak()">🔊 朗讀</span>
+  <span class="nav-link" onclick="next()">下一張 →</span>
+</div>
+
 <script>
 const W=[
 {n:1,k:'あいさつ',j:'挨拶',m:'打招呼；問候'},
@@ -705,154 +697,144 @@ const GS=[
   {l:'か行',k:'ka',min:91,max:180},
   {l:'さ行',k:'sa',min:181,max:270}
 ];
-
-let st = {
-    mode: 'card', // 'card' or 'quiz'
-    g: 'all',
-    idx: 0,
-    flip: false,
-    starred: JSON.parse(localStorage.getItem('n4s') || '{}'),
-    unf: JSON.parse(localStorage.getItem('n4u') || '{}'),
-    known: JSON.parse(localStorage.getItem('n4k') || '{}'),
+// 狀態管理
+let state = {
+  idx: 0,
+  mode: 'card',
+  flipped: false,
+  unfData: JSON.parse(localStorage.getItem('n4_unf') || '{}'),
+  knownData: JSON.parse(localStorage.getItem('n4_known') || '{}')
 };
 
 function save() {
-    localStorage.setItem('n4s', JSON.stringify(st.starred));
-    localStorage.setItem('n4u', JSON.stringify(st.unf));
-    localStorage.setItem('n4k', JSON.stringify(st.known));
-}
-
-function getWords() {
-    return st.g === 'all' ? W : W.filter(w => {
-        const g = GS.find(x => x.k === st.g);
-        return g ? (w.n >= g.min && w.n <= g.max) : true;
-    });
-}
-
-function setMode(m) {
-    st.mode = m;
-    st.flip = false;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(m === 'card' ? '抽認卡' : '測驗')));
-    document.getElementById('quizOptions').style.display = (m === 'quiz') ? 'grid' : 'none';
-    document.getElementById('cardActions').style.display = (m === 'card') ? 'block' : 'none';
-    document.getElementById('hintText').innerText = (m === 'card') ? '點擊翻面' : '請選擇正確答案';
-    render();
+  localStorage.setItem('n4_unf', JSON.stringify(state.unfData));
+  localStorage.setItem('n4_known', JSON.stringify(state.knownData));
 }
 
 function render() {
-    const list = getWords();
-    const curr = list[st.idx] || list[0];
-    
-    // UI 文字更新
-    document.getElementById('mainKana').textContent = curr.k;
-    document.getElementById('numBadge').textContent = '#' + curr.n;
-    document.getElementById('backKana').textContent = curr.k;
-    document.getElementById('backKanji').textContent = curr.j;
-    document.getElementById('backMeaning').textContent = curr.m;
-    document.getElementById('statProgress').textContent = `${st.idx + 1} / ${list.length}`;
-    
-    // 不熟次數 (靠左)
-    const count = st.unf[curr.n] || 0;
-    let dotsH = '';
-    for(let i=0; i<5; i++) dotsH += `<div class="unfamiliar-dot ${i<count?'filled':''}"></div>`;
-    document.getElementById('unfamiliarDots').innerHTML = dotsH;
-    document.getElementById('unfamiliarCount').textContent = `${count}/5`;
+  const item = W[state.idx];
+  const cardInner = document.getElementById('cardInner');
 
-    // 掌握統計
-    document.getElementById('statKnown').textContent = Object.values(st.known).filter(Boolean).length;
-    document.getElementById('statUnfamiliar').textContent = Object.values(st.unf).filter(v => v > 0).length;
+  // 更新內容
+  document.getElementById('wordId').textContent = `#${item.n}`;
+  document.getElementById('mainKana').textContent = item.k;
+  document.getElementById('backKanji').textContent = item.j;
+  document.getElementById('backKana').textContent = item.k;
+  document.getElementById('backMeaning').textContent = item.m;
+  document.getElementById('progText').textContent = `${state.idx + 1} / ${W.length}`;
 
-    // 處理卡片翻轉狀態 (核心修復：避免翻頁看到背面)
-    const ci = document.getElementById('cardInner');
-    if (st.flip) {
-        ci.classList.add('flipped');
-    } else {
-        ci.classList.add('no-anim'); // 暫時關閉動畫
-        ci.classList.remove('flipped');
-        setTimeout(() => ci.classList.remove('no-anim'), 50); // 重新開啟動畫
-    }
+  // 更新紅點 (追蹤器)
+  const count = state.unfData[item.n] || 0;
+  let dotHTML = '';
+  for(let i=1; i<=5; i++) {
+    dotHTML += `<div class="dot ${i <= count ? 'filled' : ''}"></div>`;
+  }
+  document.getElementById('dotBox').innerHTML = dotHTML;
+  document.getElementById('dotCountText').textContent = `${Math.min(count, 5)}/5`;
 
-    if(st.mode === 'quiz') renderQuiz(curr);
+  // 翻轉邏輯處理
+  if (state.flipped) {
+    cardInner.classList.add('flipped');
+  } else {
+    // 切換下一張時，先移除動畫效果，瞬間轉回正面，避免看到背面答案
+    cardInner.classList.add('no-transition');
+    cardInner.classList.remove('flipped');
+    setTimeout(() => cardInner.classList.remove('no-transition'), 20);
+  }
+
+  // 測驗模式選項生成
+  if (state.mode === 'quiz') {
+    renderQuizOptions(item);
+  }
 }
 
-function renderQuiz(curr) {
-    const container = document.getElementById('quizOptions');
-    const options = [curr.m];
-    while(options.length < 4) {
-        const randomW = W[Math.floor(Math.random()*W.length)].m;
-        if(!options.includes(randomW)) options.push(randomW);
-    }
-    options.sort(() => Math.random() - 0.5);
+function renderQuizOptions(correctItem) {
+  const quizArea = document.getElementById('quizArea');
+  let options = [correctItem.m];
+  while(options.length < 4) {
+    let rand = W[Math.floor(Math.random()*W.length)].m;
+    if(!options.includes(rand)) options.push(rand);
+  }
+  options.sort(() => Math.random() - 0.5);
 
-    container.innerHTML = options.map(opt => 
-        `<button class="option-btn" onclick="checkAnswer('${opt}', '${curr.m}')">${opt}</button>`
-    ).join('');
+  quizArea.innerHTML = options.map(opt => 
+    `<button class="quiz-btn" onclick="checkQuiz('${opt}', '${correctItem.m}')">${opt}</button>`
+  ).join('');
 }
 
-function checkAnswer(selected, correct) {
-    if(selected === correct) {
-        toast('正解！ ⭕');
-        markKnown();
-    } else {
-        toast(`答錯了，正確是：${correct} ❌`);
-        markUnfamiliar();
-    }
+function checkQuiz(selected, correct) {
+  if (selected === correct) {
+    showToast("正解！ ⭕");
+    mark(true);
+  } else {
+    showToast(`錯了！正確是：${correct} ❌`);
+    mark(false);
+  }
 }
 
-function flipCard() { st.flip = !st.flip; render(); }
-
-function nextCard() {
-    const list = getWords();
-    if(st.idx < list.length - 1) {
-        st.idx++;
-        st.flip = false; // 切換時強迫重置為正面
-        render();
-    }
+function handleCardClick() {
+  if (state.mode === 'card') {
+    state.flipped = !state.flipped;
+    render();
+  }
 }
 
-function prevCard() {
-    if(st.idx > 0) {
-        st.idx--;
-        st.flip = false;
-        render();
-    }
+function setMode(m) {
+  state.mode = m;
+  state.flipped = false;
+  document.getElementById('mCard').classList.toggle('active', m === 'card');
+  document.getElementById('mQuiz').classList.toggle('active', m === 'quiz');
+  document.getElementById('quizArea').style.display = m === 'quiz' ? 'grid' : 'none';
+  document.getElementById('cardControls').style.display = m === 'card' ? 'flex' : 'none';
+  render();
 }
 
-function markKnown() {
-    const curr = getWords()[st.idx];
-    st.known[curr.n] = true;
-    st.unf[curr.n] = 0;
-    save();
-    nextCard();
+function mark(isKnown) {
+  const item = W[state.idx];
+  if (isKnown) {
+    state.knownData[item.n] = true;
+  } else {
+    state.unfData[item.n] = (state.unfData[item.n] || 0) + 1;
+    state.knownData[item.n] = false;
+  }
+  save();
+  next();
 }
 
-function markUnfamiliar() {
-    const curr = getWords()[st.idx];
-    st.unf[curr.n] = (st.unf[curr.n] || 0) + 1;
-    st.known[curr.n] = false;
-    save();
-    if(st.mode === 'card') nextCard();
-    else render(); // 測驗模式下重新洗牌
+function next() {
+  if (state.idx < W.length - 1) {
+    state.idx++;
+    state.flipped = false;
+    render();
+  } else {
+    showToast("已經是最後一張了！");
+  }
 }
 
-function speakWord() {
-    const curr = getWords()[st.idx];
-    const u = new SpeechSynthesisUtterance(curr.k);
-    u.lang = 'ja-JP';
-    speechSynthesis.speak(u);
+function prev() {
+  if (state.idx > 0) {
+    state.idx--;
+    state.flipped = false;
+    render();
+  }
 }
 
-function toast(m) {
-    const t = document.getElementById('toast');
-    t.innerText = m;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 1500);
+function speak() {
+  const msg = new SpeechSynthesisUtterance(W[state.idx].k);
+  msg.lang = 'ja-JP';
+  window.speechSynthesis.speak(msg);
 }
 
-// 初始化
-setMode('card');
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+// 初始啟動
+render();
 </script>
 </body>
 </html>
-</body>
-</html>
+

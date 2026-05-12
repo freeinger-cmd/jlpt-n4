@@ -3,135 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>日檢N4單字學習筆記</title>
+<title>日檢N4學習助手 Pro</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans TC', 'Hiragino Sans', sans-serif; background: #1a1a2e; color: #e8e8f0; min-height: 100vh; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: #1a1a2e; color: #e8e8f0; min-height: 100vh; overflow-x: hidden; }
+  
+  /* 導航與選單 */
   .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #16213e; border-bottom: 1px solid #2a2a4a; }
-  .top-nav h1 { font-size: 15px; font-weight: 600; }
-  .count-badge { background: #2a2a4a; color: #aaa; font-size: 12px; padding: 3px 10px; border-radius: 20px; }
-  .filter-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; background: #16213e; scrollbar-width: none; }
-  .filter-tabs::-webkit-scrollbar { display: none; }
-  .tab { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; }
+  .top-nav h1 { font-size: 15px; }
+  .filter-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; background: #16213e; }
+  .tab { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; background: #2a2a4a; color: #aaa; }
   .tab.active { background: #7c4dff; color: #fff; }
-  .tab:not(.active) { background: #2a2a4a; color: #aaa; }
-  .mode-toggle { display: flex; margin: 10px 12px 0; background: #2a2a4a; border-radius: 8px; overflow: hidden; }
+
+  /* 模式切換 */
+  .mode-toggle { display: flex; margin: 10px 12px; background: #2a2a4a; border-radius: 8px; overflow: hidden; }
   .mode-btn { flex: 1; padding: 10px; text-align: center; font-size: 14px; cursor: pointer; border: none; background: transparent; color: #aaa; }
   .mode-btn.active { background: #7c4dff; color: #fff; font-weight: 600; }
-  .stats-row { display: flex; gap: 10px; padding: 12px 12px 0; }
-  .stat-box { flex: 1; background: #16213e; border-radius: 10px; padding: 12px; text-align: center; }
-  .stat-num { font-size: 28px; font-weight: 700; }
-  .stat-num.blue { color: #4fc3f7; }
-  .stat-num.green { color: #66bb6a; }
-  .stat-num.red { color: #ef5350; }
-  .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
-  .progress-bar-wrap { margin: 10px 12px 0; height: 3px; background: #2a2a4a; border-radius: 2px; }
-  .progress-bar { height: 100%; background: #7c4dff; border-radius: 2px; transition: width 0.3s; }
-  .nav-row { display: flex; align-items: center; padding: 10px 12px; gap: 10px; }
-  .nav-btn { padding: 8px 16px; background: #2a2a4a; border: none; color: #ccc; border-radius: 8px; cursor: pointer; font-size: 14px; }
-  .nav-btn:disabled { opacity: 0.3; cursor: default; }
-  .page-info { flex: 1; text-align: center; font-size: 13px; color: #888; }
-  .flip-btn { padding: 8px 18px; background: #7c4dff; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
-  .card-area { margin: 0 12px; perspective: 1000px; cursor: pointer; }
-  .card-inner { position: relative; width: 100%; min-height: 260px; transition: transform 0.5s; transform-style: preserve-3d; }
+
+  /* 數據統計 */
+  .stats-row { display: flex; gap: 10px; padding: 0 12px; }
+  .stat-box { flex: 1; background: #16213e; border-radius: 10px; padding: 10px; text-align: center; }
+  .stat-num { font-size: 20px; font-weight: 700; }
+  .blue { color: #4fc3f7; } .green { color: #66bb6a; } .red { color: #ef5350; }
+
+  /* 卡片區域 */
+  .card-area { margin: 15px 12px; perspective: 1000px; }
+  .card-inner { position: relative; width: 100%; min-height: 280px; transition: transform 0.6s; transform-style: preserve-3d; }
+  /* 關鍵修復：切換時移除動畫 */
+  .card-inner.no-anim { transition: none !important; }
   .card-inner.flipped { transform: rotateY(180deg); }
-  .card-face { position: absolute; width: 100%; min-height: 260px; backface-visibility: hidden; background: #16213e; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #2a2a4a; }
+  
+  .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #16213e; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #2a2a4a; }
   .card-back { transform: rotateY(180deg); }
-  .main-kana { font-size: 50px; font-weight: 400; color: #e8e8f0; line-height: 1.2; text-align: center; }
-  .click-hint { font-size: 12px; color: #555; margin-top: 4px; }
-  .back-kana { font-size: 26px; color: #b39ddb; }
-  .back-kanji { font-size: 36px; font-weight: 700; color: #e8e8f0; }
-  .back-meaning { font-size: 20px; color: #4fc3f7; font-weight: 500; text-align: center; }
-  .unfamiliar-tracker { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 2px 0; }
-  .unfamiliar-label { font-size: 11px; color: #888; }
+
+  /* UI 調整：不熟次數靠左 */
+  .unfamiliar-tracker { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 15px; width: 100%; }
   .unfamiliar-dots { display: flex; gap: 4px; }
-  .unfamiliar-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #ef5350; background: transparent; transition: background 0.2s; }
+  .unfamiliar-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #ef5350; }
   .unfamiliar-dot.filled { background: #ef5350; }
-  .action-row { display: flex; gap: 10px; padding: 10px 12px 0; }
-  .action-btn { flex: 1; padding: 13px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; }
-  .btn-known { background: #1b3a2e; color: #66bb6a; }
-  .btn-unfamiliar { background: #3a1b1b; color: #ef5350; }
-  .bottom-row { display: flex; gap: 10px; padding: 10px 12px 12px; }
-  .audio-btn { flex: 1; padding: 12px; background: #2a2a4a; border: none; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; }
-  .flip-big-btn { flex: 2; padding: 12px; background: #7c4dff; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; }
-  .star-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; cursor: pointer; font-size: 22px; z-index: 2; }
-  .num-badge { position: absolute; top: 12px; left: 12px; background: #2a2a4a; color: #888; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
-  .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-10px); background: #ffd600; color: #222; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 100; pointer-events: none; white-space: nowrap; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .bottom-nav { display: flex; background: #16213e; border-top: 1px solid #2a2a4a; position: sticky; bottom: 0; }
-  .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; cursor: pointer; border: none; background: transparent; color: #888; font-size: 10px; gap: 3px; }
-  .bottom-nav-btn.active { color: #ffd600; }
-  .bottom-nav-btn .icon { font-size: 20px; }
+
+  .main-kana { font-size: 48px; text-align: center; margin: 20px 0; }
+  .back-kanji { font-size: 32px; color: #fff; text-align: center; }
+  .back-meaning { font-size: 20px; color: #4fc3f7; text-align: center; margin-top: 10px; }
+
+  /* 測驗模式選項 */
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 12px; }
+  .option-btn { background: #2a2a4a; border: 1px solid #3f3f5f; color: #fff; padding: 15px 10px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .option-btn:active { background: #7c4dff; }
+
+  /* 控制按鈕 */
+  .action-row { display: flex; gap: 10px; padding: 10px 12px; }
+  .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn-k { background: #1b3a2e; color: #66bb6a; }
+  .btn-u { background: #3a1b1b; color: #ef5350; }
+  
+  .nav-row { display: flex; justify-content: space-between; padding: 10px 12px; align-items: center; }
+  .nav-btn { background: #2a2a4a; color: #ccc; border: none; padding: 8px 15px; border-radius: 5px; }
+
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffd600; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; opacity: 0; transition: 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
+<div id="toast" class="toast"></div>
+
 <div class="top-nav">
-  <h1>日檢N4單字學習筆記</h1>
-  <span class="count-badge" id="totalBadge">565 個</span>
+  <h1>日檢 N4 單字考場</h1>
+  <div id="statProgress" class="stat-num blue" style="font-size:14px">0/565</div>
 </div>
 
 <div class="filter-tabs" id="filterTabs"></div>
 
 <div class="mode-toggle">
-  <button class="mode-btn active">抽認卡</button>
-  <button class="mode-btn">測驗</button>
+  <button class="mode-btn active" onclick="setMode('card')">抽認卡</button>
+  <button class="mode-btn" onclick="setMode('quiz')">測驗模式</button>
 </div>
 
 <div class="stats-row">
-  <div class="stat-box"><div class="stat-num blue" id="statProgress">0</div><div class="stat-label">進度</div></div>
-  <div class="stat-box"><div class="stat-num green" id="statKnown">0</div><div class="stat-label">記住了</div></div>
-  <div class="stat-box"><div class="stat-num red" id="statUnfamiliar">0</div><div class="stat-label">需複習</div></div>
+  <div class="stat-box"><div class="stat-num green" id="statKnown">0</div><div style="font-size:10px">已掌握</div></div>
+  <div class="stat-box"><div class="stat-num red" id="statUnfamiliar">0</div><div style="font-size:10px">挑戰中</div></div>
 </div>
 
-<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-
-<div class="nav-row">
-  <button class="nav-btn" id="prevBtn" onclick="prevCard()">← 上一張</button>
-  <span class="page-info" id="pageInfo">1 / 565</span>
-  <button class="flip-btn" onclick="flipCard()">翻面 →</button>
-</div>
-
-<div class="card-area" onclick="flipCard()">
-  <div class="card-inner" id="cardInner">
+<!-- 卡片區 -->
+<div class="card-area" id="cardContainer">
+  <div class="card-inner" id="cardInner" onclick="if(st.mode==='card') flipCard()">
     <div class="card-face card-front">
-      <button class="star-btn" id="starBtnFront" onclick="event.stopPropagation();toggleStar()">☆</button>
-      <span class="num-badge" id="numBadge">#1</span>
-      <div class="main-kana" id="mainKana">あいさつ</div>
+      <div style="font-size:12px; color:#555" id="numBadge">#1</div>
+      <div class="main-kana" id="mainKana">讀取中...</div>
       <div class="unfamiliar-tracker">
-        <span class="unfamiliar-label">不熟次數：</span>
         <div class="unfamiliar-dots" id="unfamiliarDots"></div>
-        <span class="unfamiliar-label" id="unfamiliarCount">0/5</span>
+        <span style="font-size:10px; color:#666" id="unfamiliarCount">0/5</span>
       </div>
-      <div class="click-hint">點擊翻面查看</div>
+      <div style="text-align:center; font-size:11px; color:#444; margin-top:20px" id="hintText">點擊翻面</div>
     </div>
     <div class="card-face card-back">
-      <button class="star-btn" id="starBtnBack" onclick="event.stopPropagation();toggleStar()">☆</button>
-      <div class="back-kana" id="backKana">あいさつ</div>
-      <div class="back-kanji" id="backKanji">挨拶</div>
-      <div class="back-meaning" id="backMeaning">打招呼；問候</div>
+      <div class="back-kanji" id="backKanji">漢字</div>
+      <div style="text-align:center; color:#888; font-size:14px" id="backKana">讀音</div>
+      <div class="back-meaning" id="backMeaning">中文意思</div>
     </div>
   </div>
 </div>
 
-<div class="action-row" id="actionRow" style="display:none">
-  <button class="action-btn btn-known" onclick="markKnown()">✓ 記住了</button>
-  <button class="action-btn btn-unfamiliar" onclick="markUnfamiliar()">✗ 不熟</button>
-</div>
+<!-- 測驗選項 (預設隱藏) -->
+<div id="quizOptions" class="quiz-options" style="display:none"></div>
 
-<div class="bottom-row">
-  <button class="audio-btn" onclick="speakWord()">🔊 朗讀</button>
-  <button class="flip-big-btn" onclick="flipCard()">翻面查看</button>
-</div>
-
-<div class="bottom-nav">
-  <button class="bottom-nav-btn active" onclick="showAll()"><span class="icon">📚</span>單字</button>
-  <button class="bottom-nav-btn" onclick="showStarred()"><span class="icon">⭐</span>複習</button>
-  <button class="bottom-nav-btn" onclick="resetAll()"><span class="icon">🔄</span>重置</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<!-- 抽認卡按鈕 -->
+<div id="cardActions">
+    <div class="action-row">
+        <button class="btn btn-k" onclick="markKnown()">記住了</button>
+        <button class="btn btn-u" onclick="markUnfamiliar()">不熟</button>
+    </div>
+    <div class="nav-row">
+        <button class="nav-btn" onclick="prevCard()">← 上一張</button>
+        <button class="nav-btn" onclick="speakWord()">🔊 朗讀</button>
+        <button class="nav-btn" onclick="nextCard()">下一張 →</button>
+    </div>
 <script>
 const W=[
 {n:1,k:'あいさつ',j:'挨拶',m:'打招呼；問候'},
@@ -712,128 +699,160 @@ const GS=[
   {l:'ま〜わ 447-528',k:'ma',min:447,max:528},
   {l:'補充 529-565',k:'ex',min:529,max:565},
 ];
+const GS=[
+  {l:'全部',k:'all'},
+  {l:'あ行',k:'a',min:1,max:90},
+  {l:'か行',k:'ka',min:91,max:180},
+  {l:'さ行',k:'sa',min:181,max:270}
+];
 
-let st={
-  g:'all',idx:0,flip:false,star:false,
-  starred:JSON.parse(localStorage.getItem('n4s')||'{}'),
-  unf:JSON.parse(localStorage.getItem('n4u')||'{}'),
-  known:JSON.parse(localStorage.getItem('n4k')||'{}'),
+let st = {
+    mode: 'card', // 'card' or 'quiz'
+    g: 'all',
+    idx: 0,
+    flip: false,
+    starred: JSON.parse(localStorage.getItem('n4s') || '{}'),
+    unf: JSON.parse(localStorage.getItem('n4u') || '{}'),
+    known: JSON.parse(localStorage.getItem('n4k') || '{}'),
 };
 
-function save(){
-  localStorage.setItem('n4s',JSON.stringify(st.starred));
-  localStorage.setItem('n4u',JSON.stringify(st.unf));
-  localStorage.setItem('n4k',JSON.stringify(st.known));
+function save() {
+    localStorage.setItem('n4s', JSON.stringify(st.starred));
+    localStorage.setItem('n4u', JSON.stringify(st.unf));
+    localStorage.setItem('n4k', JSON.stringify(st.known));
 }
 
-function words(){
-  if(st.star) return W.filter(w=>st.starred[w.n]);
-  if(st.g==='all') return W;
-  const g=GS.find(x=>x.k===st.g);
-  return g?W.filter(w=>w.n>=g.min&&w.n<=g.max):W;
+function getWords() {
+    return st.g === 'all' ? W : W.filter(w => {
+        const g = GS.find(x => x.k === st.g);
+        return g ? (w.n >= g.min && w.n <= g.max) : true;
+    });
 }
 
-function w(){return words()[st.idx]||words()[0];}
-
-function tabs(){
-  document.getElementById('filterTabs').innerHTML=GS.map(g=>
-    `<button class="tab ${g.k===st.g&&!st.star?'active':''}" onclick="setG('${g.k}')">${g.l}</button>`
-  ).join('');
+function setMode(m) {
+    st.mode = m;
+    st.flip = false;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(m === 'card' ? '抽認卡' : '測驗')));
+    document.getElementById('quizOptions').style.display = (m === 'quiz') ? 'grid' : 'none';
+    document.getElementById('cardActions').style.display = (m === 'card') ? 'block' : 'none';
+    document.getElementById('hintText').innerText = (m === 'card') ? '點擊翻面' : '請選擇正確答案';
+    render();
 }
 
-function setG(k){st.g=k;st.idx=0;st.flip=false;st.star=false;navActive(0);tabs();render();}
+function render() {
+    const list = getWords();
+    const curr = list[st.idx] || list[0];
+    
+    // UI 文字更新
+    document.getElementById('mainKana').textContent = curr.k;
+    document.getElementById('numBadge').textContent = '#' + curr.n;
+    document.getElementById('backKana').textContent = curr.k;
+    document.getElementById('backKanji').textContent = curr.j;
+    document.getElementById('backMeaning').textContent = curr.m;
+    document.getElementById('statProgress').textContent = `${st.idx + 1} / ${list.length}`;
+    
+    // 不熟次數 (靠左)
+    const count = st.unf[curr.n] || 0;
+    let dotsH = '';
+    for(let i=0; i<5; i++) dotsH += `<div class="unfamiliar-dot ${i<count?'filled':''}"></div>`;
+    document.getElementById('unfamiliarDots').innerHTML = dotsH;
+    document.getElementById('unfamiliarCount').textContent = `${count}/5`;
 
-function render(){
-  const ww=w(),ws=words(),tot=ws.length;
-  document.getElementById('mainKana').textContent=ww.k;
-  document.getElementById('numBadge').textContent='#'+ww.n;
-  document.getElementById('backKana').textContent=ww.k;
-  document.getElementById('backKanji').textContent=ww.j;
-  document.getElementById('backMeaning').textContent=ww.m;
-  const isStar=!!st.starred[ww.n];
-  document.getElementById('starBtnFront').textContent=isStar?'⭐':'☆';
-  document.getElementById('starBtnBack').textContent=isStar?'⭐':'☆';
-  document.getElementById('pageInfo').textContent=(st.idx+1)+' / '+tot;
-  document.getElementById('prevBtn').disabled=st.idx===0;
-  document.getElementById('progressBar').style.width=Math.round(((st.idx+1)/tot)*100)+'%';
-  document.getElementById('statProgress').textContent=st.idx+1;
-  document.getElementById('statKnown').textContent=Object.values(st.known).filter(Boolean).length;
-  document.getElementById('statUnfamiliar').textContent=Object.values(st.unf).filter(v=>v>0).length;
-  dots(ww);
-  const ci=document.getElementById('cardInner');
-  if(st.flip){ci.classList.add('flipped');document.getElementById('actionRow').style.display='flex';}
-  else{ci.classList.remove('flipped');document.getElementById('actionRow').style.display='none';}
+    // 掌握統計
+    document.getElementById('statKnown').textContent = Object.values(st.known).filter(Boolean).length;
+    document.getElementById('statUnfamiliar').textContent = Object.values(st.unf).filter(v => v > 0).length;
+
+    // 處理卡片翻轉狀態 (核心修復：避免翻頁看到背面)
+    const ci = document.getElementById('cardInner');
+    if (st.flip) {
+        ci.classList.add('flipped');
+    } else {
+        ci.classList.add('no-anim'); // 暫時關閉動畫
+        ci.classList.remove('flipped');
+        setTimeout(() => ci.classList.remove('no-anim'), 50); // 重新開啟動畫
+    }
+
+    if(st.mode === 'quiz') renderQuiz(curr);
 }
 
-function dots(ww){
-  const c=st.unf[ww.n]||0;
-  let h='';
-  for(let i=0;i<5;i++) h+=`<div class="unfamiliar-dot ${i<c?'filled':''}"></div>`;
-  document.getElementById('unfamiliarDots').innerHTML=h;
-  document.getElementById('unfamiliarCount').textContent=c+'/5';
+function renderQuiz(curr) {
+    const container = document.getElementById('quizOptions');
+    const options = [curr.m];
+    while(options.length < 4) {
+        const randomW = W[Math.floor(Math.random()*W.length)].m;
+        if(!options.includes(randomW)) options.push(randomW);
+    }
+    options.sort(() => Math.random() - 0.5);
+
+    container.innerHTML = options.map(opt => 
+        `<button class="option-btn" onclick="checkAnswer('${opt}', '${curr.m}')">${opt}</button>`
+    ).join('');
 }
 
-function flipCard(){st.flip=!st.flip;render();}
-function prevCard(){if(st.idx>0){st.idx--;st.flip=false;render();}}
-function nextCard(){const ws=words();if(st.idx<ws.length-1){st.idx++;st.flip=false;render();}}
-
-function markKnown(){const ww=w();st.known[ww.n]=true;save();nextCard();}
-
-function markUnfamiliar(){
-  const ww=w();
-  const prev=st.unf[ww.n]||0;
-  const next=Math.min(prev+1,99);
-  st.unf[ww.n]=next;
-  st.known[ww.n]=false;
-  save();
-  if(next===5&&!st.starred[ww.n]){
-    st.starred[ww.n]=true;save();
-    toast('⭐ 不熟5次！已自動加入複習！');
-  }
-  dots(ww);
-  setTimeout(()=>nextCard(),250);
+function checkAnswer(selected, correct) {
+    if(selected === correct) {
+        toast('正解！ ⭕');
+        markKnown();
+    } else {
+        toast(`答錯了，正確是：${correct} ❌`);
+        markUnfamiliar();
+    }
 }
 
-function toggleStar(){
-  const ww=w();
-  st.starred[ww.n]=!st.starred[ww.n];
-  save();
-  document.getElementById('starBtnFront').textContent=st.starred[ww.n]?'⭐':'☆';
-  document.getElementById('starBtnBack').textContent=st.starred[ww.n]?'⭐':'☆';
+function flipCard() { st.flip = !st.flip; render(); }
+
+function nextCard() {
+    const list = getWords();
+    if(st.idx < list.length - 1) {
+        st.idx++;
+        st.flip = false; // 切換時強迫重置為正面
+        render();
+    }
 }
 
-function showStarred(){st.star=true;st.idx=0;st.flip=false;navActive(1);tabs();render();}
-function showAll(){st.star=false;st.idx=0;st.flip=false;st.g='all';navActive(0);tabs();render();}
-
-function resetAll(){
-  if(!confirm('確定要重置所有學習進度嗎？')) return;
-  st.starred={};st.unf={};st.known={};st.idx=0;st.flip=false;
-  save();render();toast('✓ 已重置所有進度');
+function prevCard() {
+    if(st.idx > 0) {
+        st.idx--;
+        st.flip = false;
+        render();
+    }
 }
 
-function speakWord(){
-  const u=new SpeechSynthesisUtterance(w().k);
-  u.lang='ja-JP';speechSynthesis.speak(u);
+function markKnown() {
+    const curr = getWords()[st.idx];
+    st.known[curr.n] = true;
+    st.unf[curr.n] = 0;
+    save();
+    nextCard();
 }
 
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function markUnfamiliar() {
+    const curr = getWords()[st.idx];
+    st.unf[curr.n] = (st.unf[curr.n] || 0) + 1;
+    st.known[curr.n] = false;
+    save();
+    if(st.mode === 'card') nextCard();
+    else render(); // 測驗模式下重新洗牌
 }
 
-function navActive(i){
-  document.querySelectorAll('.bottom-nav-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+function speakWord() {
+    const curr = getWords()[st.idx];
+    const u = new SpeechSynthesisUtterance(curr.k);
+    u.lang = 'ja-JP';
+    speechSynthesis.speak(u);
 }
 
-let tx=0;
-document.querySelector('.card-area').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
-document.querySelector('.card-area').addEventListener('touchend',e=>{
-  const dx=e.changedTouches[0].clientX-tx;
-  if(Math.abs(dx)>60){if(dx<0)nextCard();else prevCard();}
-});
+function toast(m) {
+    const t = document.getElementById('toast');
+    t.innerText = m;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1500);
+}
 
-tabs();render();
+// 初始化
+setMode('card');
 </script>
+</body>
+</html>
 </body>
 </html>

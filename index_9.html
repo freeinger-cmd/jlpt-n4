@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="N4單字">
+<meta name="theme-color" content="#0d0d1a">
+<title>N4單字學習</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','Noto Sans TC',sans-serif;min-height:100vh;padding-bottom:70px;}
+
+/* ── 底部導航 ── */
+.nav{position:fixed;bottom:0;left:0;right:0;background:#13132a;border-top:1px solid #2a2a4a;display:flex;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;font-size:10px;color:#666;cursor:pointer;transition:color .2s;}
+.nav-item.active{color:#7c6af7;}
+.nav-item .ni{font-size:20px;margin-bottom:2px;}
+
+/* ── 頁面區塊 ── */
+.section{display:none;padding:0 0 16px;}
+.section.active{display:block;}
+.hdr{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-title{font-size:22px;font-weight:800;}
+.hdr-count{background:#1e1e3a;border-radius:20px;padding:4px 12px;font-size:12px;color:#aaa;}
+
+/* ── 分組 Tab ── */
+.ftags-wrap{overflow-x:auto;padding:0 16px 8px;scrollbar-width:none;}
+.ftags-wrap::-webkit-scrollbar{display:none;}
+.ftags{display:flex;gap:8px;width:max-content;}
+.ftag{background:#1a1a30;border:1px solid #2a2a4a;color:#888;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:inherit;}
+.ftag.on{background:#7c6af7;border-color:#7c6af7;color:#fff;}
+
+/* ── 模式切換 ── */
+.mode-tabs{display:flex;background:#13132a;border-radius:12px;margin:0 16px 12px;padding:4px;}
+.mode-tab{flex:1;text-align:center;padding:12px 8px;border-radius:8px;font-size:13px;cursor:pointer;color:#888;transition:all .2s;font-family:inherit;border:none;background:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.mode-tab.active{background:#7c6af7;color:#fff;font-weight:700;}
+
+/* ── 統計列 ── */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 16px 12px;}
+.stat{background:#13132a;border-radius:12px;padding:10px;text-align:center;}
+.stat-num{font-size:24px;font-weight:800;}
+.stat-num.blue{color:#6aaff7;}
+.stat-num.green{color:#6af7b8;}
+.stat-num.red{color:#f76a6a;}
+.stat-label{font-size:11px;color:#666;margin-top:2px;}
+
+/* ── 進度條 ── */
+.prog-wrap{margin:0 16px 12px;background:#1a1a30;border-radius:8px;height:4px;overflow:hidden;}
+.prog-bar{height:100%;background:linear-gradient(90deg,#7c6af7,#6af7b8);border-radius:8px;transition:width .4s;}
+
+/* ── 卡片導航 ── */
+.card-nav{display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;}
+.cnav-btn{background:#1a1a30;border:1px solid #2a2a4a;color:#aaa;border-radius:10px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit;}
+.card-cnt{font-size:14px;color:#888;}
+.cnav-flip{background:#7c6af7;border:none;color:#fff;border-radius:10px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* ── 抽認卡（翻牌動畫）── */
+.card-wrap{padding:0 16px;perspective:1000px;}
+.card-inner{
+  position:relative;width:100%;height:270px;
+  transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;border-radius:20px;
+}
+/* ★ Gemini 優化：切換新卡片時瞬間復位，避免看到背面 */
+.card-inner.no-transition{transition:none!important;}
+.card-inner.flipped{transform:rotateY(180deg);}
+
+.card-face{
+  position:absolute;width:100%;height:100%;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:20px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(135deg,#1a1a35 0%,#13132a 100%);
+  border:1px solid #2a2a4a;box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.card-back{transform:rotateY(180deg);}
+
+/* ── 卡片內容 ── */
+.c-tag{font-size:11px;border-radius:20px;padding:3px 10px;font-weight:700;margin-bottom:6px;}
+.c-rd{font-size:15px;color:#9a9aff;text-align:center;letter-spacing:2px;margin-top:4px;}
+.c-mn{font-size:18px;font-weight:700;color:#6af7b8;text-align:center;margin-top:6px;}
+.mem-box{background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);border-radius:10px;padding:8px 12px;margin-top:8px;width:100%;}
+.mem-label{font-size:10px;color:#7c6af7;font-weight:700;margin-bottom:2px;}
+.mem-text{font-size:12px;color:#ccc;line-height:1.5;}
+.ex-text{font-size:11px;color:#888;text-align:center;margin-top:6px;line-height:1.6;}
+
+/* ★ 不熟次數追蹤點點 */
+.miss-tracker{display:flex;align-items:center;gap:5px;margin-top:8px;}
+.miss-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #f76a6a;background:transparent;transition:background .2s;}
+.miss-dot.filled{background:#f76a6a;}
+.miss-count{font-size:11px;color:#f76a6a;margin-left:2px;}
+
+/* ── 卡片提示 ── */
+.card-hint{text-align:center;font-size:11px;color:#444;padding:8px 0 0;}
+
+/* ── 手機觸控優化 ── */
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+
+/* ── 按鈕列 ── */
+.vact{display:none;gap:10px;padding:12px 16px 0;}
+.vact-btn{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+.vact-btn.ok{background:rgba(106,247,184,.15);color:#6af7b8;border:1px solid #6af7b8;}
+.vact-btn.ng{background:rgba(247,106,106,.15);color:#f76a6a;border:1px solid #f76a6a;}
+.vflip{display:flex;gap:10px;padding:12px 16px 0;}
+.speak-btn{background:#1a1a30;border:1px solid #2a2a4a;color:#aaa;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;flex:1;}
+.flip-btn{background:#7c6af7;border:none;color:#fff;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;flex:2;font-weight:700;}
+
+/* ── 測驗模式 ── */
+.qbox{padding:0 16px;}
+.q-word{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:32px;font-weight:700;text-align:center;margin-bottom:4px;}
+.q-sub{font-size:13px;color:#888;text-align:center;margin-bottom:16px;}
+.q-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.q-opt{background:#1a1a30;border:1px solid #2a2a4a;color:#ddd;border-radius:12px;padding:12px 8px;font-size:13px;cursor:pointer;font-family:inherit;}
+.q-opt.ok{background:rgba(106,247,184,.2);border-color:#6af7b8;color:#6af7b8;}
+.q-opt.ng{background:rgba(247,106,106,.2);border-color:#f76a6a;color:#f76a6a;}
+.q-res{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:8px;line-height:1.6;}
+.q-res.ok{background:rgba(106,247,184,.1);color:#6af7b8;}
+.q-res.ng{background:rgba(247,106,106,.1);color:#f76a6a;}
+.next-btn{width:100%;padding:12px;background:#7c6af7;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;}
+
+/* ── 複習清單 ── */
+.empty-state{text-align:center;padding:40px 20px;color:#666;font-size:15px;line-height:2;}
+.rtabs{display:flex;gap:8px;padding:0 16px 12px;}
+.rtab{background:#1a1a30;border:1px solid #2a2a4a;color:#888;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:inherit;}
+.rtab.active{background:#7c6af7;border-color:#7c6af7;color:#fff;}
+.rev-item{background:#13132a;border:1px solid #2a2a4a;border-radius:14px;padding:14px;margin:0 16px 10px;}
+.rev-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.rev-jp{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:20px;font-weight:700;}
+.rev-rd{font-size:13px;color:#9a9aff;}
+.rev-speak{background:none;border:none;font-size:18px;cursor:pointer;margin-left:auto;}
+.rev-mn{font-size:14px;color:#6af7b8;margin-bottom:6px;}
+.rev-miss{font-size:11px;color:#f76a6a;margin-top:4px;}
+
+/* ── 聽力練習 ── */
+.listen-card{background:linear-gradient(135deg,#1a1a35,#13132a);border:1px solid #2a2a4a;border-radius:20px;margin:0 16px;padding:40px 20px;text-align:center;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.listen-icon{font-size:56px;margin-bottom:12px;}
+.listen-hint{font-size:13px;color:#666;margin-bottom:16px;}
+.play-btn{background:#7c6af7;border:none;color:#fff;border-radius:14px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.l-jp{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700;margin-bottom:4px;}
+.l-rd{font-size:15px;color:#9a9aff;letter-spacing:2px;margin-bottom:4px;}
+.l-mn{font-size:16px;color:#6af7b8;}
+.lact{display:none;gap:10px;padding:12px 16px 0;}
+.lplay{display:flex;gap:10px;padding:12px 16px 0;}
+
+/* ★ Toast 提示 */
+.toast{
+  position:fixed;top:18px;left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  background:#f7c46a;color:#1a0f00;
+  padding:9px 22px;border-radius:20px;
+  font-size:13px;font-weight:700;
+  z-index:9999;opacity:0;
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ 單字練習 ══ -->
+<div class="section active" id="s-vocab">
+  <div class="hdr">
+    <div class="hdr-title">單字練習</div>
+    <div class="hdr-count" id="vocab-count">590 個</div>
+  </div>
+  <div class="ftags-wrap"><div class="ftags" id="ftags"></div></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="vm-flash" onclick="setVMode('flash')">抽認卡</button>
+    <button class="mode-tab" id="vm-quiz" onclick="setVMode('quiz')">測驗</button>
+  </div>
+
+  <!-- 抽認卡 -->
+  <div id="vm-flash-div">
+    <div class="stats">
+      <div class="stat"><div class="stat-num blue" id="sv-t">0</div><div class="stat-label">進度</div></div>
+      <div class="stat"><div class="stat-num green" id="sv-k">0</div><div class="stat-label">記住了</div></div>
+      <div class="stat"><div class="stat-num red" id="sv-f">0</div><div class="stat-label">需複習</div></div>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="vp" style="width:0%"></div></div>
+    <div class="card-nav">
+      <button class="cnav-btn" id="v-prev" onclick="vPrev()">← 上一張</button>
+      <span class="card-cnt" id="vcnt">1 / 590</span>
+      <button class="cnav-flip" onclick="flipCard()">翻面 →</button>
+    </div>
+    <div class="card-wrap">
+      <div class="card-inner" id="ci" onclick="flipCard()">
+        <div class="card-face card-front" id="cfront"></div>
+        <div class="card-face card-back" id="cback"></div>
+      </div>
+    </div>
+    <div class="card-hint" id="vhint">點擊卡片翻面查看意思</div>
+    <div class="vflip" id="vflip">
+      <button class="speak-btn" onclick="speakCurrent()">🔊 朗讀</button>
+      <button class="flip-btn" onclick="flipCard()">翻面查看</button>
+    </div>
+    <div class="vact" id="vact">
+      <button class="vact-btn ng" onclick="vAns(false)">❌ 不熟</button>
+      <button class="vact-btn ok" onclick="vAns(true)">✅ 記住了</button>
+    </div>
+  </div>
+
+  <!-- 測驗 -->
+  <div id="vm-quiz-div" style="display:none;">
+    <div class="stats">
+      <div class="stat"><div class="stat-num blue" id="sv-t2">0</div><div class="stat-label">進度</div></div>
+      <div class="stat"><div class="stat-num green" id="sv-k2">0</div><div class="stat-label">答對</div></div>
+      <div class="stat"><div class="stat-num red" id="sv-f2">0</div><div class="stat-label">答錯</div></div>
+    </div>
+    <div class="qbox" id="qbox"></div>
+  </div>
+</div>
+
+<!-- ══ 假名練習 ══ -->
+<div class="section" id="s-kana">
+  <div class="hdr"><div class="hdr-title">假名練習</div></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="km-flash" onclick="setKMode('flash')">抽認卡</button>
+    <button class="mode-tab" id="km-kanji" onclick="setKMode('kanji')">漢字測驗</button>
+    <button class="mode-tab" id="km-meaning" onclick="setKMode('meaning')">意思測驗</button>
+  </div>
+  <div id="km-flash-div">
+    <div class="stats">
+      <div class="stat"><div class="stat-num blue" id="sk-t">0</div><div class="stat-label">進度</div></div>
+      <div class="stat"><div class="stat-num green" id="sk-k">0</div><div class="stat-label">記住了</div></div>
+      <div class="stat"><div class="stat-num red" id="sk-f">0</div><div class="stat-label">需複習</div></div>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="kp" style="width:0%"></div></div>
+    <div class="card-nav">
+      <button class="cnav-btn" onclick="kPrev()">← 上一張</button>
+      <span class="card-cnt" id="kcnt">1 / 590</span>
+      <button class="cnav-flip" onclick="flipKana()">翻面 →</button>
+    </div>
+    <div class="card-wrap">
+      <div class="card-inner" id="kci" onclick="flipKana()">
+        <div class="card-face card-front" id="kfront"></div>
+        <div class="card-face card-back" id="kback"></div>
+      </div>
+    </div>
+    <div class="card-hint" id="khint">點擊卡片翻面確認漢字</div>
+    <div class="vflip" id="kflip">
+      <button class="speak-btn" onclick="speakKana()">🔊 朗讀</button>
+      <button class="flip-btn" onclick="flipKana()">翻面查看</button>
+    </div>
+    <div class="vact" id="kact">
+      <button class="vact-btn ng" onclick="kAns(false)">❌ 不熟</button>
+      <button class="vact-btn ok" onclick="kAns(true)">✅ 記住了</button>
+    </div>
+  </div>
+  <div id="km-kanji-div" style="display:none;"><div class="qbox" id="kquiz-kanji"></div></div>
+  <div id="km-meaning-div" style="display:none;"><div class="qbox" id="kquiz-meaning"></div></div>
+</div>
+
+<!-- ══ 聽力練習 ══ -->
+<div class="section" id="s-listen">
+  <div class="hdr"><div class="hdr-title">聽力練習</div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num blue" id="sl-t">0</div><div class="stat-label">進度</div></div>
+    <div class="stat"><div class="stat-num green" id="sl-k">0</div><div class="stat-label">答對</div></div>
+    <div class="stat"><div class="stat-num red" id="sl-f">0</div><div class="stat-label">需複習</div></div>
+  </div>
+  <div class="prog-wrap"><div class="prog-bar" id="lp" style="width:0%"></div></div>
+  <div class="card-nav">
+    <button class="cnav-btn" onclick="lPrev()">← 上一個</button>
+    <span class="card-cnt" id="lnum">1 / 590</span>
+    <div style="width:80px"></div>
+  </div>
+  <div class="listen-card" id="lcard">
+    <div class="listen-icon">🎧</div>
+    <p class="listen-hint">按下播放，聽發音猜單字</p>
+    <div id="lreveal" style="display:none;"></div>
+  </div>
+  <div class="lplay" id="lplay">
+    <button class="speak-btn" onclick="playListen()">🔊 播放</button>
+    <button class="flip-btn" onclick="showListen()">顯示答案</button>
+  </div>
+  <div class="lact" id="lact">
+    <button class="vact-btn ng" onclick="lAns(false)">❌ 不熟</button>
+    <button class="vact-btn ok" onclick="lAns(true)">✅ 記住了</button>
+  </div>
+</div>
+
+<!-- ══ 複習清單 ══ -->
+<div class="section" id="s-review">
+  <div class="hdr"><div class="hdr-title">複習清單</div></div>
+  <div class="rtabs">
+    <button class="rtab active" id="rt-vocab" onclick="setRTab('vocab')">單字</button>
+    <button class="rtab" id="rt-kana" onclick="setRTab('kana')">假名</button>
+  </div>
+  <div id="rv-vocab"></div>
+  <div id="rv-kana" style="display:none;"></div>
+  <div style="padding:0 16px 16px;">
+    <button class="next-btn" style="background:#f76a6a;" onclick="resetAll()">↺ 重置所有進度</button>
+  </div>
+</div>
+
+<!-- ══ 底部導航 ══ -->
+<nav class="nav">
+  <div class="nav-item active" id="n-vocab" onclick="setSection('vocab')"><div class="ni">📚</div>單字</div>
+  <div class="nav-item" id="n-kana" onclick="setSection('kana')"><div class="ni">🈳</div>假名</div>
+  <div class="nav-item" id="n-listen" onclick="setSection('listen')"><div class="ni">🎧</div>聽力</div>
+  <div class="nav-item" id="n-review" onclick="setSection('review')"><div class="ni">⭐</div>複習</div>
+</nav>
+
+<script>
+// ══════════════════════════════════════════
+//  品詞標籤設定
+// ══════════════════════════════════════════
+const TC={
+  noun:{l:'名詞',bg:'rgba(106,175,247,0.2)',cl:'#6aaff7'},
+  verb:{l:'動詞',bg:'rgba(106,247,184,0.2)',cl:'#6af7b8'},
+  adj: {l:'形容詞',bg:'rgba(247,160,106,0.2)',cl:'#f7a06a'},
+  adv: {l:'副詞',bg:'rgba(247,106,247,0.2)',cl:'#f76af7'},
+  expr:{l:'表達',bg:'rgba(247,228,106,0.2)',cl:'#f7e46a'},
+};
+
+// ══════════════════════════════════════════
+//  分組 Tag 設定
+// ══════════════════════════════════════════
+const TAGS=[
+  {k:'all',l:'全部'},
+  {k:'あ①',l:'あ①1-40'},{k:'あ②',l:'あ②41-100'},
+  {k:'か①',l:'か①101-140'},{k:'か②',l:'か②141-200'},
+  {k:'さ',l:'さ201-260'},{k:'し',l:'し261-320'},
+  {k:'す',l:'す321-370'},{k:'た',l:'た371-420'},
+  {k:'な',l:'な421-480'},{k:'は',l:'は481-530'},
+  {k:'ま',l:'ま531-565'},{k:'新',l:'新増566+'},
+];
+
+// ══════════════════════════════════════════
+//  單字資料
+// ══════════════════════════════════════════
+const VOCAB=[
+  {jp:'挨拶',rd:'あいさつ',mn:'打招呼',pos:'noun',tag:'あ①',mem:'あいさつ＝相遇時的禮儀',ex:'毎朝、元気に挨拶しましょう。'},
+  {jp:'青',rd:'あお',mn:'藍色',pos:'noun',tag:'あ①',mem:'あお→藍天的顏色',ex:'空は青いです。'},
+  {jp:'青い',rd:'あおい',mn:'藍色的',pos:'adj',tag:'あ①',mem:'青い空＝藍天',ex:'青い空が好きです。'},
+  {jp:'赤',rd:'あか',mn:'紅色',pos:'noun',tag:'あ①',mem:'あか→紅蘋果',ex:'赤いりんごを食べます。'},
+  {jp:'秋',rd:'あき',mn:'秋天',pos:'noun',tag:'あ①',mem:'あき→落葉季節',ex:'秋になると葉が落ちます。'},
+  {jp:'空き缶',rd:'あきかん',mn:'空罐子',pos:'noun',tag:'あ①',mem:'空き＝空的＋缶＝罐',ex:'空き缶を捨てないでください。'},
+  {jp:'開ける',rd:'あける',mn:'打開',pos:'verb',tag:'あ①',mem:'あける→打開門窗',ex:'窓を開けてください。'},
+  {jp:'味',rd:'あじ',mn:'味道',pos:'noun',tag:'あ①',mem:'あじ→舌頭感受到的',ex:'この料理は味がいいです。'},
+  {jp:'遊ぶ',rd:'あそぶ',mn:'玩耍',pos:'verb',tag:'あ①',mem:'あそぶ→孩子在玩',ex:'子供たちが公園で遊んでいます。'},
+  {jp:'温かい',rd:'あたたかい',mn:'溫暖的',pos:'adj',tag:'あ①',mem:'あたたかい→溫暖的感覺',ex:'温かいお茶を飲みます。'},
+  {jp:'集まる',rd:'あつまる',mn:'聚集',pos:'verb',tag:'あ①',mem:'あつまる→大家聚在一起',ex:'友達が家に集まります。'},
+  {jp:'集める',rd:'あつめる',mn:'收集',pos:'verb',tag:'あ①',mem:'あつめる→把東西收集起來',ex:'切手を集めています。'},
+  {jp:'宛先',rd:'あてさき',mn:'收件人地址',pos:'noun',tag:'あ①',mem:'宛先＝寄送目的地',ex:'宛先を確認してください。'},
+  {jp:'あまり',rd:'あまり',mn:'不太（否定）',pos:'adv',tag:'あ①',mem:'あまり＋否定＝不太～',ex:'あまり好きじゃないです。'},
+  {jp:'雨',rd:'あめ',mn:'雨',pos:'noun',tag:'あ①',mem:'あめ→從天上掉下來的水',ex:'雨が降っています。'},
+  {jp:'謝る',rd:'あやまる',mn:'道歉',pos:'verb',tag:'あ①',mem:'あやまる→低頭說對不起',ex:'失敗したので謝りました。'},
+  {jp:'歩く',rd:'あるく',mn:'走路',pos:'verb',tag:'あ①',mem:'あるく→用腳走路',ex:'毎日30分歩きます。'},
+  {jp:'アルバイト',rd:'アルバイト',mn:'打工',pos:'noun',tag:'あ①',mem:'德文Arbeit→工作',ex:'学生がアルバイトをしています。'},
+  {jp:'案内',rd:'あんない',mn:'引導',pos:'noun',tag:'あ①',mem:'案内→帶路指引',ex:'駅まで案内します。'},
+  {jp:'以外',rd:'いがい',mn:'以外',pos:'noun',tag:'あ①',mem:'以外＝除此之外',ex:'これ以外に方法はありません。'},
+  {jp:'意外',rd:'いがい',mn:'意外的',pos:'adj',tag:'あ①',mem:'意外＝出乎意料',ex:'意外な結果になりました。'},
+  {jp:'生け花',rd:'いけばな',mn:'插花',pos:'noun',tag:'あ①',mem:'生け＋花＝讓花活著',ex:'生け花を習っています。'},
+  {jp:'意見',rd:'いけん',mn:'意見',pos:'noun',tag:'あ①',mem:'意見＝自己的想法',ex:'あなたの意見を聞かせてください。'},
+  {jp:'石',rd:'いし',mn:'石頭',pos:'noun',tag:'あ①',mem:'いし→路邊的石頭',ex:'川で石を拾いました。'},
+  {jp:'急がない',rd:'いそがない',mn:'不趕快',pos:'verb',tag:'あ①',mem:'急ぐ的否定形',ex:'急がないと遅れます。'},
+  {jp:'頂きます',rd:'いただきます',mn:'我開動了',pos:'expr',tag:'あ①',mem:'吃飯前的感謝語',ex:'食事の前に頂きますと言います。'},
+  {jp:'一日中',rd:'いちにちちゅう',mn:'一整天',pos:'adv',tag:'あ①',mem:'一日＋中＝整天',ex:'一日中勉強しました。'},
+  {jp:'いつか',rd:'いつか',mn:'總有一天',pos:'adv',tag:'あ①',mem:'いつか→未來某個時候',ex:'いつか日本に行きたいです。'},
+  {jp:'いつでも',rd:'いつでも',mn:'隨時',pos:'adv',tag:'あ①',mem:'いつ＋でも＝任何時候',ex:'いつでも来てください。'},
+  {jp:'いつまで',rd:'いつまで',mn:'到什麼時候',pos:'adv',tag:'あ①',mem:'いつ＋まで＝到何時',ex:'いつまで待てばいいですか。'},
+  {jp:'いつも',rd:'いつも',mn:'總是',pos:'adv',tag:'あ①',mem:'いつも→每次都是',ex:'いつも笑顔ですね。'},
+  {jp:'糸',rd:'いと',mn:'線',pos:'noun',tag:'あ①',mem:'いと→細細的線',ex:'針に糸を通します。'},
+  {jp:'今すぐ',rd:'いますぐ',mn:'馬上',pos:'adv',tag:'あ①',mem:'今＋すぐ＝立刻現在',ex:'今すぐ来てください。'},
+  {jp:'意味',rd:'いみ',mn:'意思',pos:'noun',tag:'あ①',mem:'意味＝這個詞代表什麼',ex:'この言葉の意味は何ですか。'},
+  {jp:'いらっしゃいませ',rd:'いらっしゃいませ',mn:'歡迎光臨',pos:'expr',tag:'あ①',mem:'店員歡迎客人的用語',ex:'店員が「いらっしゃいませ」と言いました。'},
+  {jp:'入れる',rd:'いれる',mn:'放入',pos:'verb',tag:'あ①',mem:'いれる→把東西放進去',ex:'バッグに荷物を入れます。'},
+  {jp:'インターネット',rd:'インターネット',mn:'網路',pos:'noun',tag:'あ①',mem:'Internet→網路',ex:'インターネットで調べます。'},
+  {jp:'受付',rd:'うけつけ',mn:'接待處',pos:'noun',tag:'あ①',mem:'受け付け＝接受辦理',ex:'受付で名前を書きます。'},
+  {jp:'受ける',rd:'うける',mn:'接受',pos:'verb',tag:'あ①',mem:'うける→承受、接受',ex:'試験を受けます。'},
+  {jp:'動かない',rd:'うごかない',mn:'不動',pos:'verb',tag:'あ①',mem:'動く的否定＝不動',ex:'車が動かないです。'},
+  {jp:'薄い',rd:'うすい',mn:'薄的',pos:'adj',tag:'あ②',mem:'うすい→厚さが少ない',ex:'この本は薄いです。'},
+  {jp:'嘘',rd:'うそ',mn:'謊言',pos:'noun',tag:'あ②',mem:'うそをつく＝說謊',ex:'嘘をついてはいけません。'},
+  {jp:'うっかり',rd:'うっかり',mn:'不小心',pos:'adv',tag:'あ②',mem:'うっかり→粗心大意',ex:'うっかり忘れてしまいました。'},
+  {jp:'美しい',rd:'うつくしい',mn:'美麗的',pos:'adj',tag:'あ②',mem:'うつくしい→令人讚嘆的美',ex:'富士山は美しいです。'},
+  {jp:'移す',rd:'うつす',mn:'移動',pos:'verb',tag:'あ②',mem:'うつす→把位置移過去',ex:'机を部屋に移します。'},
+  {jp:'映す',rd:'うつす',mn:'投影',pos:'verb',tag:'あ②',mem:'うつす→映在螢幕上',ex:'スクリーンに映します。'},
+  {jp:'写す',rd:'うつす',mn:'抄寫',pos:'verb',tag:'あ②',mem:'うつす→複製一份',ex:'ノートに写します。'},
+  {jp:'うまい',rd:'うまい',mn:'好吃・厲害',pos:'adj',tag:'あ②',mem:'うまい→技術或味道都好',ex:'この料理はうまいです。'},
+  {jp:'売り場',rd:'うりば',mn:'賣場',pos:'noun',tag:'あ②',mem:'売り＋場＝販售的地方',ex:'食品売り場はどこですか。'},
+  {jp:'売る',rd:'うる',mn:'賣',pos:'verb',tag:'あ②',mem:'うる→把東西賣出去',ex:'お土産を売っています。'},
+  {jp:'上着',rd:'うわぎ',mn:'外套',pos:'noun',tag:'あ②',mem:'上＋着＝穿在上面的衣服',ex:'上着を着てください。'},
+  {jp:'運転',rd:'うんてん',mn:'駕駛',pos:'noun',tag:'あ②',mem:'運転→操控交通工具',ex:'車を運転します。'},
+  {jp:'運転手',rd:'うんてんしゅ',mn:'司機',pos:'noun',tag:'あ②',mem:'運転＋手＝開車的人',ex:'バスの運転手さんに聞きます。'},
+  {jp:'運動場',rd:'うんどうじょう',mn:'運動場',pos:'noun',tag:'あ②',mem:'運動＋場＝運動的地方',ex:'運動場で走ります。'},
+  {jp:'営業',rd:'えいぎょう',mn:'營業',pos:'noun',tag:'あ②',mem:'営業中＝現在開門中',ex:'9時から営業しています。'},
+  {jp:'駅員',rd:'えきいん',mn:'車站人員',pos:'noun',tag:'あ②',mem:'駅＋員＝車站的工作人員',ex:'駅員に道を聞きました。'},
+  {jp:'エスカレーター',rd:'エスカレーター',mn:'手扶梯',pos:'noun',tag:'あ②',mem:'escalator→自動移動的梯子',ex:'エスカレーターで上がります。'},
+  {jp:'蝦',rd:'えび',mn:'蝦子',pos:'noun',tag:'あ②',mem:'えび→海鮮中的蝦',ex:'エビが好きです。'},
+  {jp:'絵本',rd:'えほん',mn:'繪本',pos:'noun',tag:'あ②',mem:'絵＋本＝有圖畫的書',ex:'子供に絵本を読みます。'},
+  {jp:'選ぶ',rd:'えらぶ',mn:'選擇',pos:'verb',tag:'あ②',mem:'えらぶ→從多個中選一個',ex:'好きな色を選んでください。'},
+  {jp:'エレベーター',rd:'エレベーター',mn:'電梯',pos:'noun',tag:'あ②',mem:'elevator→上下移動的箱子',ex:'エレベーターで3階へ行きます。'},
+  {jp:'エンジニア',rd:'エンジニア',mn:'工程師',pos:'noun',tag:'あ②',mem:'engineer→技術專業人員',ex:'彼はエンジニアです。'},
+  {jp:'遠慮',rd:'えんりょ',mn:'客氣',pos:'noun',tag:'あ②',mem:'遠慮なく＝請不要客氣',ex:'遠慮しないでください。'},
+  {jp:'大勢',rd:'おおぜい',mn:'很多人',pos:'noun',tag:'あ②',mem:'大勢＝人數眾多',ex:'大勢の人が集まりました。'},
+  {jp:'オートバイ',rd:'オートバイ',mn:'摩托車',pos:'noun',tag:'あ②',mem:'auto+bike→機車',ex:'オートバイで来ました。'},
+  {jp:'お菓子',rd:'おかし',mn:'點心',pos:'noun',tag:'あ②',mem:'おかし→甜食點心',ex:'お菓子を食べます。'},
+  {jp:'お客',rd:'おきゃく',mn:'客人',pos:'noun',tag:'あ②',mem:'お客さん→來訪的人',ex:'お客さんが来ています。'},
+  {jp:'起きる',rd:'おきる',mn:'起床',pos:'verb',tag:'あ②',mem:'おきる→從睡夢中醒來',ex:'朝6時に起きます。'},
+  {jp:'遅れる',rd:'おくれる',mn:'遲到',pos:'verb',tag:'あ②',mem:'おくれる→比預定時間晚',ex:'電車が遅れています。'},
+  {jp:'怒る',rd:'おこる',mn:'生氣',pos:'verb',tag:'あ②',mem:'おこる→火氣上來了',ex:'先生が怒りました。'},
+  {jp:'お辞儀',rd:'おじぎ',mn:'鞠躬',pos:'noun',tag:'あ②',mem:'おじぎ→日本的禮儀動作',ex:'深くお辞儀をします。'},
+  {jp:'お知らせ',rd:'おしらせ',mn:'通知',pos:'noun',tag:'あ②',mem:'お知らせ＝告知事項',ex:'大切なお知らせがあります。'},
+  {jp:'押す',rd:'おす',mn:'按',pos:'verb',tag:'あ②',mem:'おす→用力壓下去',ex:'ボタンを押してください。'},
+  {jp:'遅い',rd:'おそい',mn:'慢的',pos:'adj',tag:'あ②',mem:'おそい→速度或時間慢',ex:'この電車は遅いです。'},
+  {jp:'教わる',rd:'おそわる',mn:'被教導',pos:'verb',tag:'あ②',mem:'おそわる→向人學習',ex:'先生に教わります。'},
+  {jp:'落ちる',rd:'おちる',mn:'掉落',pos:'verb',tag:'あ②',mem:'おちる→從高處落下',ex:'リンゴが落ちました。'},
+  {jp:'音',rd:'おと',mn:'聲音',pos:'noun',tag:'あ②',mem:'おと→耳朵聽到的',ex:'大きな音がします。'},
+  {jp:'落とす',rd:'おとす',mn:'弄掉',pos:'verb',tag:'あ②',mem:'おとす→使東西掉落',ex:'財布を落としました。'},
+  {jp:'大人しい',rd:'おとなしい',mn:'乖巧的',pos:'adj',tag:'あ②',mem:'おとなしい→不吵鬧',ex:'大人しい子供です。'},
+  {jp:'驚く',rd:'おどろく',mn:'驚訝',pos:'verb',tag:'あ②',mem:'おどろく→嚇一大跳',ex:'突然の知らせに驚きました。'},
+  {jp:'お腹',rd:'おなか',mn:'肚子',pos:'noun',tag:'あ②',mem:'お腹が空く＝肚子餓',ex:'お腹が空きました。'},
+  {jp:'同じ',rd:'おなじ',mn:'相同的',pos:'adj',tag:'あ②',mem:'おなじ→一模一樣',ex:'同じ色です。'},
+  {jp:'お久しぶり',rd:'おひさしぶり',mn:'好久不見',pos:'expr',tag:'あ②',mem:'久しぶり＝好久沒見',ex:'お久しぶりですね！'},
+  {jp:'覚える',rd:'おぼえる',mn:'記住',pos:'verb',tag:'あ②',mem:'おぼえる→記在腦子裡',ex:'単語を覚えます。'},
+  {jp:'お見舞い',rd:'おみまい',mn:'探病',pos:'noun',tag:'あ②',mem:'お見舞い→去看生病的人',ex:'入院した友達にお見舞いに行きます。'},
+  {jp:'思い出',rd:'おもいで',mn:'回憶',pos:'noun',tag:'あ②',mem:'思い＋出＝腦中浮現的',ex:'楽しい思い出があります。'},
+  {jp:'泳ぐ',rd:'およぐ',mn:'游泳',pos:'verb',tag:'あ②',mem:'およぐ→在水中移動',ex:'プールで泳ぎます。'},
+  {jp:'お礼',rd:'おれい',mn:'道謝',pos:'noun',tag:'あ②',mem:'お礼を言う＝說謝謝',ex:'お礼を言います。'},
+  {jp:'カード',rd:'カード',mn:'卡片',pos:'noun',tag:'か①',mem:'card→卡片',ex:'クレジットカードで払います。'},
+  {jp:'外国人',rd:'がいこくじん',mn:'外國人',pos:'noun',tag:'か①',mem:'外国＋人＝來自外國的人',ex:'外国人が多い街です。'},
+  {jp:'改札口',rd:'かいさつぐち',mn:'剪票口',pos:'noun',tag:'か①',mem:'改札＝驗票的地方',ex:'改札口で待ちます。'},
+  {jp:'会場',rd:'かいじょう',mn:'會場',pos:'noun',tag:'か①',mem:'会＋場＝集會的地方',ex:'会場に集まってください。'},
+  {jp:'階段',rd:'かいだん',mn:'樓梯',pos:'noun',tag:'か①',mem:'階＋段＝一層一層的',ex:'階段を上ります。'},
+  {jp:'会話',rd:'かいわ',mn:'會話',pos:'noun',tag:'か①',mem:'会話＝互相說話',ex:'日本語で会話します。'},
+  {jp:'返す',rd:'かえす',mn:'歸還',pos:'verb',tag:'か①',mem:'かえす→還回去',ex:'本を図書館に返します。'},
+  {jp:'替える',rd:'かえる',mn:'替換',pos:'verb',tag:'か①',mem:'かえる→換一個新的',ex:'電球を替えます。'},
+  {jp:'係り',rd:'かかり',mn:'負責人',pos:'noun',tag:'か①',mem:'かかり→負責處理的人',ex:'係りの人に聞いてください。'},
+  {jp:'鍵',rd:'かぎ',mn:'鑰匙',pos:'noun',tag:'か①',mem:'かぎ→開鎖的工具',ex:'鍵をなくしました。'},
+  {jp:'家具',rd:'かぐ',mn:'家具',pos:'noun',tag:'か①',mem:'家具＝家裡的用品',ex:'新しい家具を買います。'},
+  {jp:'飾る',rd:'かざる',mn:'裝飾',pos:'verb',tag:'か①',mem:'かざる→讓空間變漂亮',ex:'部屋に花を飾ります。'},
+  {jp:'貸す',rd:'かす',mn:'借出',pos:'verb',tag:'か①',mem:'かす→把東西借給別人',ex:'友達に本を貸します。'},
+  {jp:'数',rd:'かず',mn:'數量',pos:'noun',tag:'か①',mem:'かず→有多少個',ex:'数が多いです。'},
+  {jp:'数える',rd:'かぞえる',mn:'數數',pos:'verb',tag:'か①',mem:'かぞえる→一個一個數',ex:'1から10まで数えます。'},
+  {jp:'形',rd:'かたち',mn:'形狀',pos:'noun',tag:'か①',mem:'かたち→外觀的樣子',ex:'丸い形です。'},
+  {jp:'片付ける',rd:'かたづける',mn:'整理',pos:'verb',tag:'か①',mem:'かたづける→把亂的整理好',ex:'部屋を片付けます。'},
+  {jp:'課長',rd:'かちょう',mn:'課長',pos:'noun',tag:'か①',mem:'課＋長＝部門主管',ex:'課長に報告します。'},
+  {jp:'角',rd:'かど',mn:'轉角',pos:'noun',tag:'か①',mem:'かど→路的轉彎處',ex:'角を曲がってください。'},
+  {jp:'必ず',rd:'かならず',mn:'一定',pos:'adv',tag:'か①',mem:'かならず→百分百會發生',ex:'必ず来てください。'},
+  {jp:'咬む',rd:'かむ',mn:'咬',pos:'verb',tag:'か①',mem:'かむ→用牙齒咬',ex:'よく咬んで食べます。'},
+  {jp:'通う',rd:'かよう',mn:'通勤',pos:'verb',tag:'か①',mem:'かよう→固定往返某個地方',ex:'学校に通っています。'},
+  {jp:'体',rd:'からだ',mn:'身體',pos:'noun',tag:'か①',mem:'からだ→整個身體',ex:'体を大切にしてください。'},
+  {jp:'借りる',rd:'かりる',mn:'借入',pos:'verb',tag:'か①',mem:'かりる→向別人借來用',ex:'図書館で本を借ります。'},
+  {jp:'軽い',rd:'かるい',mn:'輕的',pos:'adj',tag:'か①',mem:'かるい→重量很少',ex:'このカバンは軽いです。'},
+  {jp:'カレー',rd:'カレー',mn:'咖哩',pos:'noun',tag:'か①',mem:'curry→咖哩料理',ex:'カレーを食べます。'},
+  {jp:'乾く',rd:'かわく',mn:'乾燥',pos:'verb',tag:'か①',mem:'かわく→水分消失變乾',ex:'洗濯物が乾きました。'},
+  {jp:'変わる',rd:'かわる',mn:'改變',pos:'verb',tag:'か①',mem:'かわる→和以前不同了',ex:'天気が変わりました。'},
+  {jp:'考える',rd:'かんがえる',mn:'思考',pos:'verb',tag:'か①',mem:'かんがえる→動腦思考',ex:'よく考えてから答えます。'},
+  {jp:'関係',rd:'かんけい',mn:'關係',pos:'noun',tag:'か①',mem:'関係→兩者之間的連結',ex:'彼とは関係がありません。'},
+  {jp:'看護師',rd:'かんごし',mn:'護理師',pos:'noun',tag:'か②',mem:'看護＋師＝照顧病人的人',ex:'看護師になりたいです。'},
+  {jp:'黄色',rd:'きいろ',mn:'黃色',pos:'noun',tag:'か②',mem:'きいろ→向日葵的顏色',ex:'ひまわりは黄色いです。'},
+  {jp:'消える',rd:'きえる',mn:'消失',pos:'verb',tag:'か②',mem:'きえる→不見了',ex:'電気が消えました。'},
+  {jp:'機械',rd:'きかい',mn:'機器',pos:'noun',tag:'か②',mem:'機械＝運作的裝置',ex:'機械が故障しました。'},
+  {jp:'危険',rd:'きけん',mn:'危險',pos:'noun',tag:'か②',mem:'危険→可能受傷的狀況',ex:'ここは危険です。'},
+  {jp:'帰国',rd:'きこく',mn:'回國',pos:'noun',tag:'か②',mem:'帰＋国＝回自己的國家',ex:'来月帰国します。'},
+  {jp:'技術',rd:'ぎじゅつ',mn:'技術',pos:'noun',tag:'か②',mem:'技術＝專業的能力',ex:'技術を学びます。'},
+  {jp:'汚い',rd:'きたない',mn:'髒的',pos:'adj',tag:'か②',mem:'きたない→需要清潔的',ex:'部屋が汚いです。'},
+  {jp:'喫茶店',rd:'きっさてん',mn:'咖啡廳',pos:'noun',tag:'か②',mem:'喫茶＝喝茶的店',ex:'喫茶店でコーヒーを飲みます。'},
+  {jp:'きっと',rd:'きっと',mn:'一定',pos:'adv',tag:'か②',mem:'きっと→有把握地說一定',ex:'きっと大丈夫です。'},
+  {jp:'厳しい',rd:'きびしい',mn:'嚴格的',pos:'adj',tag:'か②',mem:'きびしい→要求很高',ex:'先生は厳しいです。'},
+  {jp:'決まる',rd:'きまる',mn:'決定（自）',pos:'verb',tag:'か②',mem:'きまる→事情定下來了',ex:'日程が決まりました。'},
+  {jp:'決める',rd:'きめる',mn:'決定（他）',pos:'verb',tag:'か②',mem:'きめる→自己做出決定',ex:'目標を決めます。'},
+  {jp:'気持ち',rd:'きもち',mn:'心情',pos:'noun',tag:'か②',mem:'気持ち→內心的感受',ex:'今日は気持ちがいいです。'},
+  {jp:'着物',rd:'きもの',mn:'和服',pos:'noun',tag:'か②',mem:'着＋物＝穿的東西',ex:'着物を着ます。'},
+  {jp:'急行',rd:'きゅうこう',mn:'急行列車',pos:'noun',tag:'か②',mem:'急行＝快速列車',ex:'急行に乗ります。'},
+  {jp:'牛乳',rd:'ぎゅうにゅう',mn:'牛奶',pos:'noun',tag:'か②',mem:'牛＋乳＝牛的奶',ex:'毎朝牛乳を飲みます。'},
+  {jp:'胡瓜',rd:'きゅうり',mn:'小黃瓜',pos:'noun',tag:'か②',mem:'きゅうり→綠色的蔬菜',ex:'きゅうりのサラダを食べます。'},
+  {jp:'教育',rd:'きょういく',mn:'教育',pos:'noun',tag:'か②',mem:'教育＝培養人才',ex:'教育は大切です。'},
+  {jp:'興味',rd:'きょうみ',mn:'興趣',pos:'noun',tag:'か②',mem:'興味がある＝對～有興趣',ex:'日本語に興味があります。'},
+  {jp:'切る',rd:'きる',mn:'切割',pos:'verb',tag:'か②',mem:'きる→用刀切開',ex:'野菜を切ります。'},
+  {jp:'着る',rd:'きる',mn:'穿（上衣）',pos:'verb',tag:'か②',mem:'きる→穿在身上',ex:'シャツを着ます。'},
+  {jp:'切れる',rd:'きれる',mn:'用完',pos:'verb',tag:'か②',mem:'きれる→結束或斷掉',ex:'電池が切れました。'},
+  {jp:'禁煙',rd:'きんえん',mn:'禁菸',pos:'noun',tag:'か②',mem:'禁＋煙＝禁止吸菸',ex:'ここは禁煙です。'},
+  {jp:'近所',rd:'きんじょ',mn:'附近',pos:'noun',tag:'か②',mem:'近＋所＝附近的地方',ex:'近所に公園があります。'},
+  {jp:'具合',rd:'ぐあい',mn:'身體狀況',pos:'noun',tag:'さ',mem:'具合が悪い＝身體不舒服',ex:'具合が悪いです。'},
+  {jp:'空港',rd:'くうこう',mn:'機場',pos:'noun',tag:'さ',mem:'空＋港＝飛機的港口',ex:'空港まで迎えに来ます。'},
+  {jp:'クッキー',rd:'クッキー',mn:'餅乾',pos:'noun',tag:'さ',mem:'cookie→烤的小餅乾',ex:'クッキーを焼きます。'},
+  {jp:'雲',rd:'くも',mn:'雲',pos:'noun',tag:'さ',mem:'くも→天空的白色棉花',ex:'空に雲があります。'},
+  {jp:'曇り',rd:'くもり',mn:'陰天',pos:'noun',tag:'さ',mem:'くもり→雲很多的天氣',ex:'今日は曇りです。'},
+  {jp:'クラブ',rd:'クラブ',mn:'社團',pos:'noun',tag:'さ',mem:'club→同好聚集的團體',ex:'テニスクラブに入ります。'},
+  {jp:'比べる',rd:'くらべる',mn:'比較',pos:'verb',tag:'さ',mem:'くらべる→兩個放在一起看',ex:'二つを比べます。'},
+  {jp:'グラム',rd:'グラム',mn:'公克',pos:'noun',tag:'さ',mem:'gram→重量單位',ex:'100グラムください。'},
+  {jp:'グループ',rd:'グループ',mn:'小組',pos:'noun',tag:'さ',mem:'group→一起行動的團體',ex:'グループに分けます。'},
+  {jp:'計画',rd:'けいかく',mn:'計劃',pos:'noun',tag:'さ',mem:'計画→預先想好的安排',ex:'旅行の計画を立てます。'},
+  {jp:'経験',rd:'けいけん',mn:'經驗',pos:'noun',tag:'さ',mem:'経験＝親身經歷',ex:'経験が大切です。'},
+  {jp:'警察官',rd:'けいさつかん',mn:'警察',pos:'noun',tag:'さ',mem:'警察＋官＝執法人員',ex:'警察官に聞きます。'},
+  {jp:'ケーキ',rd:'ケーキ',mn:'蛋糕',pos:'noun',tag:'さ',mem:'cake→生日蛋糕',ex:'誕生日ケーキを食べます。'},
+  {jp:'ゲーム',rd:'ゲーム',mn:'遊戲',pos:'noun',tag:'さ',mem:'game→好玩的活動',ex:'ゲームをします。'},
+  {jp:'怪我',rd:'けが',mn:'受傷',pos:'noun',tag:'さ',mem:'けが＝身體受到傷害',ex:'怪我をしました。'},
+  {jp:'景色',rd:'けしき',mn:'景色',pos:'noun',tag:'さ',mem:'けしき→美麗的風景',ex:'富士山の景色が美しいです。'},
+  {jp:'消す',rd:'けす',mn:'關掉',pos:'verb',tag:'さ',mem:'けす→讓光或聲音消失',ex:'電気を消します。'},
+  {jp:'結婚式',rd:'けっこんしき',mn:'婚禮',pos:'noun',tag:'さ',mem:'結婚＋式＝結婚的典禮',ex:'結婚式に出席します。'},
+  {jp:'見学',rd:'けんがく',mn:'參觀',pos:'noun',tag:'さ',mem:'見＋学＝看並學習',ex:'工場を見学します。'},
+  {jp:'玄関',rd:'げんかん',mn:'玄關',pos:'noun',tag:'さ',mem:'げんかん→進門脫鞋的地方',ex:'玄関で靴を脱ぎます。'},
+  {jp:'見物',rd:'けんぶつ',mn:'觀光',pos:'noun',tag:'さ',mem:'見＋物＝看東西',ex:'お寺を見物します。'},
+  {jp:'交差点',rd:'こうさてん',mn:'十字路口',pos:'noun',tag:'さ',mem:'交差＝交叉的地方',ex:'交差点で曲がります。'},
+  {jp:'工事',rd:'こうじ',mn:'施工',pos:'noun',tag:'さ',mem:'工事中＝正在施工',ex:'道路の工事があります。'},
+  {jp:'工場',rd:'こうじょう',mn:'工廠',pos:'noun',tag:'さ',mem:'工＋場＝製造東西的地方',ex:'工場で働いています。'},
+  {jp:'声',rd:'こえ',mn:'聲音（人）',pos:'noun',tag:'さ',mem:'こえ→人說話的聲音',ex:'大きな声で話します。'},
+  {jp:'黒板',rd:'こくばん',mn:'黑板',pos:'noun',tag:'さ',mem:'黒＋板＝黑色的板子',ex:'黒板に書きます。'},
+  {jp:'故障',rd:'こしょう',mn:'故障',pos:'noun',tag:'さ',mem:'故障＝機器壞掉了',ex:'パソコンが故障しました。'},
+  {jp:'午前中',rd:'ごぜんちゅう',mn:'上午',pos:'noun',tag:'さ',mem:'午前＋中＝整個上午',ex:'午前中に終わります。'},
+  {jp:'答える',rd:'こたえる',mn:'回答',pos:'verb',tag:'さ',mem:'こたえる→給出答案',ex:'質問に答えます。'},
+  {jp:'コップ',rd:'コップ',mn:'杯子',pos:'noun',tag:'さ',mem:'cup→裝飲料的容器',ex:'水をコップに入れます。'},
+  {jp:'言葉',rd:'ことば',mn:'語言',pos:'noun',tag:'さ',mem:'ことば→說出口的話',ex:'日本語の言葉を覚えます。'},
+  {jp:'この辺',rd:'このへん',mn:'這附近',pos:'expr',tag:'さ',mem:'この＋辺＝這一帶',ex:'この辺に駅はありますか。'},
+  {jp:'コピー',rd:'コピー',mn:'影印',pos:'noun',tag:'さ',mem:'copy→複製一份',ex:'書類をコピーします。'},
+  {jp:'細かい',rd:'こまかい',mn:'細小的',pos:'adj',tag:'さ',mem:'こまかい→注意小細節',ex:'細かいことが気になります。'},
+  {jp:'困る',rd:'こまる',mn:'困擾',pos:'verb',tag:'さ',mem:'こまる→不知道該怎麼辦',ex:'お金がなくて困ります。'},
+  {jp:'ゴミ',rd:'ごみ',mn:'垃圾',pos:'noun',tag:'さ',mem:'ごみ→要丟掉的廢棄物',ex:'ゴミを捨てます。'},
+  {jp:'混む',rd:'こむ',mn:'擁擠',pos:'verb',tag:'さ',mem:'こむ→人多塞滿了',ex:'電車が混んでいます。'},
+  {jp:'米',rd:'こめ',mn:'白米',pos:'noun',tag:'さ',mem:'こめ→日本人的主食',ex:'お米を炊きます。'},
+  {jp:'壊す',rd:'こわす',mn:'弄壞',pos:'verb',tag:'さ',mem:'こわす→讓東西損壞',ex:'ゲームを壊しました。'},
+  {jp:'壊れる',rd:'こわれる',mn:'壞掉',pos:'verb',tag:'さ',mem:'こわれる→東西自己壞了',ex:'テレビが壊れました。'},
+  {jp:'コンサート',rd:'コンサート',mn:'音樂會',pos:'noun',tag:'さ',mem:'concert→現場演奏',ex:'コンサートに行きます。'},
+  {jp:'今度',rd:'こんど',mn:'下次',pos:'noun',tag:'さ',mem:'今度＝下一次',ex:'今度は一緒に行きましょう。'},
+  {jp:'コンビニ',rd:'コンビニ',mn:'便利商店',pos:'noun',tag:'さ',mem:'convenience store→方便的店',ex:'コンビニで買います。'},
+  {jp:'サービス',rd:'サービス',mn:'服務',pos:'noun',tag:'さ',mem:'service→為客人提供的',ex:'サービスがいいです。'},
+  {jp:'最近',rd:'さいきん',mn:'最近',pos:'adv',tag:'さ',mem:'最近＝這陣子',ex:'最近忙しいです。'},
+  {jp:'財布',rd:'さいふ',mn:'錢包',pos:'noun',tag:'さ',mem:'財布→裝錢的包包',ex:'財布を持ちます。'},
+  {jp:'サイン',rd:'サイン',mn:'簽名',pos:'noun',tag:'さ',mem:'sign→名字的手寫',ex:'サインをお願いします。'},
+  {jp:'探す',rd:'さがす',mn:'尋找',pos:'verb',tag:'さ',mem:'さがす→找不到在找',ex:'鍵を探しています。'},
+  {jp:'作文',rd:'さくぶん',mn:'作文',pos:'noun',tag:'さ',mem:'作＋文＝寫出來的文章',ex:'日本語で作文を書きます。'},
+  {jp:'差す',rd:'さす',mn:'撐（傘）',pos:'verb',tag:'さ',mem:'さす→把傘撐開',ex:'傘を差します。'},
+  {jp:'誘う',rd:'さそう',mn:'邀請',pos:'verb',tag:'さ',mem:'さそう→請別人一起來',ex:'友達を映画に誘います。'},
+  {jp:'サッカー',rd:'サッカー',mn:'足球',pos:'noun',tag:'さ',mem:'soccer→用腳踢的球',ex:'サッカーをします。'},
+  {jp:'皿',rd:'さら',mn:'盤子',pos:'noun',tag:'さ',mem:'さら→裝食物的扁容器',ex:'皿を洗います。'},
+  {jp:'サラダ',rd:'サラダ',mn:'沙拉',pos:'noun',tag:'さ',mem:'salad→生菜料理',ex:'サラダを食べます。'},
+  {jp:'触る',rd:'さわる',mn:'觸摸',pos:'verb',tag:'さ',mem:'さわる→用手碰',ex:'展示物に触らないでください。'},
+  {jp:'賛成',rd:'さんせい',mn:'贊成',pos:'noun',tag:'さ',mem:'賛成＝同意對方',ex:'その意見に賛成です。'},
+  {jp:'残念',rd:'ざんねん',mn:'遺憾',pos:'adj',tag:'さ',mem:'残念→沒辦法的遺憾',ex:'残念ですね。'},
+  {jp:'試合',rd:'しあい',mn:'比賽',pos:'noun',tag:'し',mem:'試合＝對決競爭',ex:'試合に勝ちました。'},
+  {jp:'仕方',rd:'しかた',mn:'方法',pos:'noun',tag:'し',mem:'仕方がない＝沒辦法',ex:'仕方がありません。'},
+  {jp:'叱る',rd:'しかる',mn:'責罵',pos:'verb',tag:'し',mem:'しかる→嚴厲批評',ex:'先生に叱られました。'},
+  {jp:'時間割',rd:'じかんわり',mn:'課程表',pos:'noun',tag:'し',mem:'時間＋割＝時間的分配',ex:'時間割を確認します。'},
+  {jp:'試験',rd:'しけん',mn:'考試',pos:'noun',tag:'し',mem:'試験＝測試能力',ex:'試験を受けます。'},
+  {jp:'失敗',rd:'しっぱい',mn:'失敗',pos:'noun',tag:'し',mem:'失敗→事情沒有成功',ex:'失敗を恐れません。'},
+  {jp:'質問',rd:'しつもん',mn:'問題',pos:'noun',tag:'し',mem:'質問＝想知道答案',ex:'質問があります。'},
+  {jp:'失礼しました',rd:'しつれいしました',mn:'失禮了',pos:'expr',tag:'し',mem:'失礼＝不禮貌的行為',ex:'失礼しました。'},
+  {jp:'自転車',rd:'じてんしゃ',mn:'腳踏車',pos:'noun',tag:'し',mem:'自転車→自己踩踏前進',ex:'自転車で通学します。'},
+  {jp:'品物',rd:'しなもの',mn:'物品',pos:'noun',tag:'し',mem:'品物＝商品物品',ex:'品物を確認します。'},
+  {jp:'自分',rd:'じぶん',mn:'自己',pos:'noun',tag:'し',mem:'自分＝我自己',ex:'自分でやります。'},
+  {jp:'事務所',rd:'じむしょ',mn:'辦公室',pos:'noun',tag:'し',mem:'事務＋所＝處理事務的地方',ex:'事務所に連絡します。'},
+  {jp:'閉める',rd:'しめる',mn:'關閉',pos:'verb',tag:'し',mem:'しめる→把開著的關上',ex:'ドアを閉めます。'},
+  {jp:'じゃがいも',rd:'じゃがいも',mn:'馬鈴薯',pos:'noun',tag:'し',mem:'じゃがいも→圓形的澱粉蔬菜',ex:'じゃがいもを茹でます。'},
+  {jp:'シャツ',rd:'シャツ',mn:'襯衫',pos:'noun',tag:'し',mem:'shirt→上半身的衣服',ex:'白いシャツを着ます。'},
+  {jp:'シャンプー',rd:'シャンプー',mn:'洗髮精',pos:'noun',tag:'し',mem:'shampoo→洗頭的液體',ex:'シャンプーで髪を洗います。'},
+  {jp:'習慣',rd:'しゅうかん',mn:'習慣',pos:'noun',tag:'し',mem:'習慣＝固定的行為模式',ex:'毎日運動する習慣があります。'},
+  {jp:'住所',rd:'じゅうしょ',mn:'住址',pos:'noun',tag:'し',mem:'住所＝住的地方',ex:'住所を教えてください。'},
+  {jp:'授業',rd:'じゅぎょう',mn:'上課',pos:'noun',tag:'し',mem:'授業＝老師教學的時間',ex:'授業が始まります。'},
+  {jp:'宿題',rd:'しゅくだい',mn:'作業',pos:'noun',tag:'し',mem:'宿題→回家要做的功課',ex:'宿題をします。'},
+  {jp:'出発',rd:'しゅっぱつ',mn:'出發',pos:'noun',tag:'し',mem:'出発＝開始移動',ex:'9時に出発します。'},
+  {jp:'趣味',rd:'しゅみ',mn:'嗜好',pos:'noun',tag:'し',mem:'趣味＝興趣愛好',ex:'趣味は読書です。'},
+  {jp:'種類',rd:'しゅるい',mn:'種類',pos:'noun',tag:'し',mem:'種類＝分類的類別',ex:'いろんな種類があります。'},
+  {jp:'準備',rd:'じゅんび',mn:'準備',pos:'noun',tag:'し',mem:'準備→事先做好的安排',ex:'旅行の準備をします。'},
+  {jp:'紹介',rd:'しょうかい',mn:'介紹',pos:'noun',tag:'し',mem:'紹介＝讓兩方認識',ex:'友達を紹介します。'},
+  {jp:'小説',rd:'しょうせつ',mn:'小說',pos:'noun',tag:'し',mem:'小説＝虛構的故事書',ex:'小説を読みます。'},
+  {jp:'招待',rd:'しょうたい',mn:'邀請',pos:'noun',tag:'し',mem:'招待＝正式邀請',ex:'パーティーに招待されました。'},
+  {jp:'丈夫',rd:'じょうぶ',mn:'健壯的',pos:'adj',tag:'し',mem:'丈夫＝不容易壞或生病',ex:'丈夫な体です。'},
+  {jp:'ジョギング',rd:'ジョギング',mn:'慢跑',pos:'noun',tag:'し',mem:'jogging→緩慢跑步運動',ex:'毎朝ジョギングします。'},
+  {jp:'食堂',rd:'しょくどう',mn:'食堂',pos:'noun',tag:'し',mem:'食＋堂＝吃飯的地方',ex:'食堂で昼ご飯を食べます。'},
+  {jp:'食料品',rd:'しょくりょうひん',mn:'食品',pos:'noun',tag:'し',mem:'食料＋品＝食物種類',ex:'食料品を買います。'},
+  {jp:'調べる',rd:'しらべる',mn:'調查',pos:'verb',tag:'し',mem:'しらべる→查詢找答案',ex:'インターネットで調べます。'},
+  {jp:'知る',rd:'しる',mn:'知道',pos:'verb',tag:'し',mem:'しる→腦子裡有這個資訊',ex:'知っていますか？'},
+  {jp:'神社',rd:'じんじゃ',mn:'神社',pos:'noun',tag:'し',mem:'神社＝日本的神明廟',ex:'神社に参ります。'},
+  {jp:'心配',rd:'しんぱい',mn:'擔心',pos:'noun',tag:'し',mem:'心配＝心裡不安',ex:'心配しないでください。'},
+  {jp:'水泳',rd:'すいえい',mn:'游泳',pos:'noun',tag:'す',mem:'水＋泳＝在水中游',ex:'水泳が得意です。'},
+  {jp:'スイッチ',rd:'スイッチ',mn:'開關',pos:'noun',tag:'す',mem:'switch→切換開或關',ex:'スイッチを押します。'},
+  {jp:'スーツ',rd:'スーツ',mn:'西裝',pos:'noun',tag:'す',mem:'suit→正式的套裝',ex:'スーツを着ます。'},
+  {jp:'好き',rd:'すき',mn:'喜歡的',pos:'adj',tag:'す',mem:'好き＝心裡喜愛的感覺',ex:'音楽が好きです。'},
+  {jp:'スキー',rd:'スキー',mn:'滑雪',pos:'noun',tag:'す',mem:'ski→在雪地上滑行',ex:'冬にスキーをします。'},
+  {jp:'空く',rd:'すく',mn:'變空',pos:'verb',tag:'す',mem:'すく→人或東西變少',ex:'席が空きました。'},
+  {jp:'少ない',rd:'すくない',mn:'少的',pos:'adj',tag:'す',mem:'すくない→數量不多',ex:'お金が少ないです。'},
+  {jp:'進む',rd:'すすむ',mn:'前進',pos:'verb',tag:'す',mem:'すすむ→往前移動',ex:'まっすぐ進みます。'},
+  {jp:'すっかり',rd:'すっかり',mn:'完全地',pos:'adv',tag:'す',mem:'すっかり→完全、徹底地',ex:'すっかり忘れました。'},
+  {jp:'ずっと',rd:'ずっと',mn:'一直',pos:'adv',tag:'す',mem:'ずっと→持續不間斷',ex:'ずっと待っています。'},
+  {jp:'捨てる',rd:'すてる',mn:'丟棄',pos:'verb',tag:'す',mem:'すてる→把不要的丟掉',ex:'ゴミを捨てます。'},
+  {jp:'スポーツ',rd:'スポーツ',mn:'運動',pos:'noun',tag:'す',mem:'sports→身體活動',ex:'スポーツが好きです。'},
+  {jp:'座る',rd:'すわる',mn:'坐下',pos:'verb',tag:'す',mem:'すわる→讓身體坐下',ex:'椅子に座ります。'},
+  {jp:'生活',rd:'せいかつ',mn:'生活',pos:'noun',tag:'す',mem:'生活＝每天的日常',ex:'便利な生活です。'},
+  {jp:'精算',rd:'せいさん',mn:'結算',pos:'noun',tag:'す',mem:'精算機＝計費機器',ex:'精算機で精算します。'},
+  {jp:'セーター',rd:'セーター',mn:'毛衣',pos:'noun',tag:'す',mem:'sweater→保暖的針織衣',ex:'冬はセーターを着ます。'},
+  {jp:'世界',rd:'せかい',mn:'世界',pos:'noun',tag:'す',mem:'世界＝地球上所有地方',ex:'世界旅行をしたいです。'},
+  {jp:'咳',rd:'せき',mn:'咳嗽',pos:'noun',tag:'す',mem:'せきが出る＝咳嗽',ex:'咳が出ます。'},
+  {jp:'席',rd:'せき',mn:'座位',pos:'noun',tag:'す',mem:'席＝坐的位置',ex:'席を探します。'},
+  {jp:'説明',rd:'せつめい',mn:'說明',pos:'noun',tag:'す',mem:'説明＝解釋清楚',ex:'説明してください。'},
+  {jp:'是非',rd:'ぜひ',mn:'務必',pos:'adv',tag:'す',mem:'是非＝請一定要',ex:'是非来てください。'},
+  {jp:'狭い',rd:'せまい',mn:'狹窄的',pos:'adj',tag:'す',mem:'せまい→空間很小',ex:'この部屋は狭いです。'},
+  {jp:'世話',rd:'せわ',mn:'照顧',pos:'noun',tag:'す',mem:'お世話になる＝承蒙照顧',ex:'お世話になっています。'},
+  {jp:'センチ',rd:'センチ',mn:'公分',pos:'noun',tag:'す',mem:'centimeter→長度單位',ex:'身長は170センチです。'},
+  {jp:'相談',rd:'そうだん',mn:'商量',pos:'noun',tag:'す',mem:'相談＝一起討論',ex:'先生に相談します。'},
+  {jp:'育てる',rd:'そだてる',mn:'培育',pos:'verb',tag:'す',mem:'そだてる→讓生命成長',ex:'子供を育てます。'},
+  {jp:'卒業',rd:'そつぎょう',mn:'畢業',pos:'noun',tag:'す',mem:'卒業＝完成學業',ex:'大学を卒業します。'},
+  {jp:'空',rd:'そら',mn:'天空',pos:'noun',tag:'す',mem:'そら→頭上的藍色空間',ex:'空が青いです。'},
+  {jp:'そろそろ',rd:'そろそろ',mn:'差不多該',pos:'adv',tag:'す',mem:'そろそろ→時機快到了',ex:'そろそろ帰ります。'},
+  {jp:'体育館',rd:'たいいくかん',mn:'體育館',pos:'noun',tag:'た',mem:'体育＋館＝運動的建築',ex:'体育館で運動します。'},
+  {jp:'大事',rd:'だいじ',mn:'重要的',pos:'adj',tag:'た',mem:'大事＝很重要不能忽視',ex:'体が大事です。'},
+  {jp:'大切',rd:'たいせつ',mn:'珍貴的',pos:'adj',tag:'た',mem:'大切＝需要珍惜的',ex:'時間を大切にします。'},
+  {jp:'大体',rd:'だいたい',mn:'大概',pos:'adv',tag:'た',mem:'大体＝差不多、大約',ex:'大体分かりました。'},
+  {jp:'台所',rd:'だいどころ',mn:'廚房',pos:'noun',tag:'た',mem:'台所＝做料理的地方',ex:'台所で料理します。'},
+  {jp:'タオル',rd:'タオル',mn:'毛巾',pos:'noun',tag:'た',mem:'towel→擦身體的布',ex:'タオルで拭きます。'},
+  {jp:'沢山',rd:'たくさん',mn:'很多',pos:'adv',tag:'た',mem:'たくさん→數量多',ex:'沢山食べました。'},
+  {jp:'尋ねる',rd:'たずねる',mn:'詢問',pos:'verb',tag:'た',mem:'たずねる→問別人',ex:'道を尋ねます。'},
+  {jp:'訪ねる',rd:'たずねる',mn:'拜訪',pos:'verb',tag:'た',mem:'たずねる→去拜訪別人',ex:'友達の家を訪ねます。'},
+  {jp:'建てる',rd:'たてる',mn:'建造',pos:'verb',tag:'た',mem:'たてる→把建築物蓋起來',ex:'家を建てます。'},
+  {jp:'棚',rd:'たな',mn:'架子',pos:'noun',tag:'た',mem:'たな→放東西的層板',ex:'棚に本を並べます。'},
+  {jp:'楽しむ',rd:'たのしむ',mn:'享受',pos:'verb',tag:'た',mem:'たのしむ→感受快樂',ex:'旅行を楽しみます。'},
+  {jp:'頼む',rd:'たのむ',mn:'拜託',pos:'verb',tag:'た',mem:'たのむ→請別人幫忙',ex:'友達に頼みます。'},
+  {jp:'たばこ',rd:'たばこ',mn:'香菸',pos:'noun',tag:'た',mem:'たばこ→吸菸的物品',ex:'たばこを吸います。'},
+  {jp:'偶に',rd:'たまに',mn:'偶爾',pos:'adv',tag:'た',mem:'たまに→不常，偶爾',ex:'たまに映画を見ます。'},
+  {jp:'足りる',rd:'たりる',mn:'足夠',pos:'verb',tag:'た',mem:'たりる→數量剛好夠',ex:'お金が足りません。'},
+  {jp:'誰か',rd:'だれか',mn:'某人',pos:'noun',tag:'た',mem:'だれか→不知道是誰的人',ex:'誰かいますか？'},
+  {jp:'男性',rd:'だんせい',mn:'男性',pos:'noun',tag:'た',mem:'男性＝男生',ex:'男性用トイレです。'},
+  {jp:'チェック',rd:'チェック',mn:'確認',pos:'noun',tag:'た',mem:'check→確認是否正確',ex:'内容をチェックします。'},
+  {jp:'近い',rd:'ちかい',mn:'近的',pos:'adj',tag:'た',mem:'ちかい→距離短',ex:'駅が近いです。'},
+  {jp:'近く',rd:'ちかく',mn:'附近',pos:'noun',tag:'た',mem:'近く＝距離近的地方',ex:'近くに店があります。'},
+  {jp:'チケット',rd:'チケット',mn:'票券',pos:'noun',tag:'た',mem:'ticket→入場或乘車的憑證',ex:'チケットを買います。'},
+  {jp:'遅刻',rd:'ちこく',mn:'遲到',pos:'noun',tag:'た',mem:'遅刻＝比預定時間晚到',ex:'遅刻してすみません。'},
+  {jp:'チャンス',rd:'チャンス',mn:'機會',pos:'noun',tag:'た',mem:'chance→好的時機',ex:'チャンスを生かします。'},
+  {jp:'注意',rd:'ちゅうい',mn:'注意',pos:'noun',tag:'た',mem:'注意＝小心留神',ex:'注意してください。'},
+  {jp:'中止',rd:'ちゅうし',mn:'中止',pos:'noun',tag:'た',mem:'中止＝停在中途',ex:'試合が中止になりました。'},
+  {jp:'貯金',rd:'ちょきん',mn:'儲蓄',pos:'noun',tag:'た',mem:'貯金＝把錢存起來',ex:'毎月貯金します。'},
+  {jp:'チョコレート',rd:'チョコレート',mn:'巧克力',pos:'noun',tag:'た',mem:'chocolate→甜甜的點心',ex:'チョコレートが好きです。'},
+  {jp:'捕まえる',rd:'つかまえる',mn:'抓住',pos:'verb',tag:'た',mem:'つかまえる→讓對方無法逃跑',ex:'犯人を捕まえます。'},
+  {jp:'月',rd:'つき',mn:'月亮',pos:'noun',tag:'た',mem:'つき→夜晚發光的星球',ex:'月が綺麗です。'},
+  {jp:'作る',rd:'つくる',mn:'製作',pos:'verb',tag:'た',mem:'つくる→從無到有做出來',ex:'料理を作ります。'},
+  {jp:'着く',rd:'つく',mn:'抵達',pos:'verb',tag:'た',mem:'つく→到達目的地',ex:'駅に着きました。'},
+  {jp:'都合',rd:'つごう',mn:'方便',pos:'noun',tag:'た',mem:'都合がいい＝時間方便',ex:'都合はいいですか？'},
+  {jp:'伝える',rd:'つたえる',mn:'傳達',pos:'verb',tag:'た',mem:'つたえる→把訊息傳給別人',ex:'伝言を伝えます。'},
+  {jp:'包む',rd:'つつむ',mn:'包裝',pos:'verb',tag:'た',mem:'つつむ→用紙或布包起來',ex:'プレゼントを包みます。'},
+  {jp:'勤める',rd:'つとめる',mn:'上班',pos:'verb',tag:'た',mem:'つとめる→在某公司工作',ex:'会社に勤めています。'},
+  {jp:'つもり',rd:'つもり',mn:'打算',pos:'noun',tag:'た',mem:'つもり＝心中的計劃',ex:'行くつもりです。'},
+  {jp:'連れていく',rd:'つれていく',mn:'帶去',pos:'verb',tag:'た',mem:'連れ＝帶著人一起去',ex:'子供を公園に連れていきます。'},
+  {jp:'丁寧',rd:'ていねい',mn:'有禮貌的',pos:'adj',tag:'な',mem:'丁寧＝認真仔細有禮',ex:'丁寧に説明します。'},
+  {jp:'デート',rd:'デート',mn:'約會',pos:'noun',tag:'な',mem:'date→兩人約出去',ex:'デートをします。'},
+  {jp:'出かける',rd:'でかける',mn:'出門',pos:'verb',tag:'な',mem:'でかける→離開家外出',ex:'買い物に出かけます。'},
+  {jp:'手帳',rd:'てちょう',mn:'記事本',pos:'noun',tag:'な',mem:'手帳＝小型記事冊',ex:'手帳に書きます。'},
+  {jp:'手伝う',rd:'てつだう',mn:'幫忙',pos:'verb',tag:'な',mem:'てつだう→協助別人',ex:'料理を手伝います。'},
+  {jp:'出る',rd:'でる',mn:'出來',pos:'verb',tag:'な',mem:'でる→從裡面出來',ex:'家を出ます。'},
+  {jp:'店員',rd:'てんいん',mn:'店員',pos:'noun',tag:'な',mem:'店＋員＝店裡工作的人',ex:'店員に聞きます。'},
+  {jp:'電気',rd:'でんき',mn:'電燈',pos:'noun',tag:'な',mem:'電気をつける＝開燈',ex:'電気をつけます。'},
+  {jp:'天気予報',rd:'てんきよほう',mn:'天氣預報',pos:'noun',tag:'な',mem:'天気＋予報＝預測天氣',ex:'天気予報を見ます。'},
+  {jp:'電子レンジ',rd:'でんしれんじ',mn:'微波爐',pos:'noun',tag:'な',mem:'電子＋レンジ＝微波爐',ex:'電子レンジで温めます。'},
+  {jp:'どうして',rd:'どうして',mn:'為什麼',pos:'adv',tag:'な',mem:'どうして＝問原因理由',ex:'どうして来ましたか？'},
+  {jp:'どうやって',rd:'どうやって',mn:'怎麼做',pos:'adv',tag:'な',mem:'どうやって＝問方法',ex:'どうやって行きますか？'},
+  {jp:'遠い',rd:'とおい',mn:'遠的',pos:'adj',tag:'な',mem:'とおい→距離長',ex:'駅が遠いです。'},
+  {jp:'時々',rd:'ときどき',mn:'有時候',pos:'adv',tag:'な',mem:'時々＝不是每次但偶爾',ex:'時々映画を見ます。'},
+  {jp:'特に',rd:'とくに',mn:'特別',pos:'adv',tag:'な',mem:'特に＝尤其特別地',ex:'特に問題はありません。'},
+  {jp:'どこか',rd:'どこか',mn:'某處',pos:'adv',tag:'な',mem:'どこか→某個不確定的地方',ex:'どこかに行きたいです。'},
+  {jp:'閉じる',rd:'とじる',mn:'關閉',pos:'verb',tag:'な',mem:'とじる→闔上書本或眼睛',ex:'本を閉じます。'},
+  {jp:'途中',rd:'とちゅう',mn:'途中',pos:'noun',tag:'な',mem:'途中＝在中間的過程',ex:'途中で止まります。'},
+  {jp:'特急',rd:'とっきゅう',mn:'特快列車',pos:'noun',tag:'な',mem:'特急＝最快的列車',ex:'特急で行きます。'},
+  {jp:'届く',rd:'とどく',mn:'送到',pos:'verb',tag:'な',mem:'とどく→到達目的地',ex:'荷物が届きました。'},
+  {jp:'届ける',rd:'とどける',mn:'遞送',pos:'verb',tag:'な',mem:'とどける→把東西送到',ex:'郵便物を届けます。'},
+  {jp:'どなた',rd:'どなた',mn:'哪位（敬）',pos:'noun',tag:'な',mem:'どなた＝誰的敬語',ex:'どなたですか？'},
+  {jp:'どのぐらい',rd:'どのぐらい',mn:'大約多少',pos:'adv',tag:'な',mem:'どのぐらい＝程度或量',ex:'どのぐらいかかりますか？'},
+  {jp:'止める',rd:'とめる',mn:'停止',pos:'verb',tag:'な',mem:'とめる→讓動作停下來',ex:'車を止めます。'},
+  {jp:'ドライブ',rd:'ドライブ',mn:'兜風',pos:'noun',tag:'な',mem:'drive→開車出遊',ex:'ドライブに行きます。'},
+  {jp:'直す',rd:'なおす',mn:'修好',pos:'verb',tag:'な',mem:'なおす→讓壞的變好',ex:'故障を直します。'},
+  {jp:'治す',rd:'なおす',mn:'治好（病）',pos:'verb',tag:'な',mem:'なおす→把病治好',ex:'風邪を治します。'},
+  {jp:'治る',rd:'なおる',mn:'痊癒',pos:'verb',tag:'な',mem:'なおる→病自己好了',ex:'病気が治りました。'},
+  {jp:'なかなか',rd:'なかなか',mn:'相當',pos:'adv',tag:'な',mem:'なかなか難しい＝挺難的',ex:'なかなか難しいですね。'},
+  {jp:'泣く',rd:'なく',mn:'哭泣',pos:'verb',tag:'な',mem:'なく→流眼淚哭泣',ex:'子供が泣いています。'},
+  {jp:'無くす',rd:'なくす',mn:'遺失',pos:'verb',tag:'な',mem:'なくす→找不到東西了',ex:'財布を無くしました。'},
+  {jp:'投げる',rd:'なげる',mn:'投擲',pos:'verb',tag:'な',mem:'なげる→把東西丟出去',ex:'ボールを投げます。'},
+  {jp:'何故',rd:'なぜ',mn:'為什麼',pos:'adv',tag:'な',mem:'なぜ＝問原因',ex:'なぜ来ましたか？'},
+  {jp:'名前',rd:'なまえ',mn:'名字',pos:'noun',tag:'な',mem:'名前＝稱呼自己的詞',ex:'名前を教えてください。'},
+  {jp:'習う',rd:'ならう',mn:'學習',pos:'verb',tag:'な',mem:'ならう→跟老師學',ex:'ピアノを習います。'},
+  {jp:'並べる',rd:'ならべる',mn:'排列',pos:'verb',tag:'な',mem:'ならべる→整齊排好',ex:'商品を並べます。'},
+  {jp:'慣れる',rd:'なれる',mn:'習慣',pos:'verb',tag:'な',mem:'なれる→變得不再陌生',ex:'日本の生活に慣れました。'},
+  {jp:'何回も',rd:'なんかいも',mn:'好幾次',pos:'adv',tag:'な',mem:'何回＋も＝很多次',ex:'何回も練習します。'},
+  {jp:'似合う',rd:'にあう',mn:'適合',pos:'verb',tag:'な',mem:'にあう→很搭配很好看',ex:'その服が似合います。'},
+  {jp:'苦い',rd:'にがい',mn:'苦的',pos:'adj',tag:'な',mem:'にがい→苦苦的味道',ex:'コーヒーは苦いです。'},
+  {jp:'にこにこ',rd:'にこにこ',mn:'笑咪咪',pos:'adv',tag:'な',mem:'にこにこ→臉上帶著笑',ex:'にこにこ笑っています。'},
+  {jp:'について',rd:'について',mn:'關於',pos:'expr',tag:'な',mem:'について＝有關於此話題',ex:'日本について話します。'},
+  {jp:'日記',rd:'にっき',mn:'日記',pos:'noun',tag:'な',mem:'日記＝每天寫的記錄',ex:'毎日日記を書きます。'},
+  {jp:'入院',rd:'にゅういん',mn:'住院',pos:'noun',tag:'な',mem:'入院＝進入醫院住院',ex:'病院に入院します。'},
+  {jp:'入学式',rd:'にゅうがくしき',mn:'入學典禮',pos:'noun',tag:'な',mem:'入学＋式＝入學的儀式',ex:'入学式に出席します。'},
+  {jp:'によって',rd:'によって',mn:'根據',pos:'expr',tag:'な',mem:'によって＝取決於',ex:'人によって違います。'},
+  {jp:'人形',rd:'にんぎょう',mn:'玩偶',pos:'noun',tag:'な',mem:'人＋形＝人的形狀玩具',ex:'人形を集めます。'},
+  {jp:'盗む',rd:'ぬすむ',mn:'偷竊',pos:'verb',tag:'な',mem:'ぬすむ→偷走別人的東西',ex:'物を盗んではいけません。'},
+  {jp:'温い',rd:'ぬるい',mn:'溫溫的',pos:'adj',tag:'な',mem:'ぬるい→不夠熱的溫度',ex:'お湯がぬるいです。'},
+  {jp:'濡れる',rd:'ぬれる',mn:'弄濕',pos:'verb',tag:'な',mem:'ぬれる→被水弄濕',ex:'雨に濡れました。'},
+  {jp:'値段',rd:'ねだん',mn:'價格',pos:'noun',tag:'な',mem:'値段＝東西的價錢',ex:'値段を確認します。'},
+  {jp:'熱',rd:'ねつ',mn:'發燒',pos:'noun',tag:'な',mem:'熱が出る＝發燒了',ex:'熱が出ました。'},
+  {jp:'熱心',rd:'ねっしん',mn:'認真的',pos:'adj',tag:'な',mem:'熱心＝充滿熱情認真',ex:'熱心に勉強します。'},
+  {jp:'寝坊',rd:'ねぼう',mn:'睡過頭',pos:'noun',tag:'な',mem:'ねぼう→睡太久沒起來',ex:'今日は寝坊しました。'},
+  {jp:'眠い',rd:'ねむい',mn:'想睡的',pos:'adj',tag:'な',mem:'ねむい→眼皮很重',ex:'眠いです。'},
+  {jp:'残る',rd:'のこる',mn:'剩下',pos:'verb',tag:'な',mem:'のこる→還有剩餘的',ex:'お金が残ります。'},
+  {jp:'乗り換える',rd:'のりかえる',mn:'轉車',pos:'verb',tag:'な',mem:'乗り換え＝換另一班車',ex:'渋谷で乗り換えます。'},
+  {jp:'歯医者',rd:'はいしゃ',mn:'牙醫',pos:'noun',tag:'は',mem:'歯＋医者＝治牙的醫生',ex:'歯医者に行きます。'},
+  {jp:'入る',rd:'はいる',mn:'進入',pos:'verb',tag:'は',mem:'はいる→從外面進到裡面',ex:'部屋に入ります。'},
+  {jp:'履く',rd:'はく',mn:'穿（鞋）',pos:'verb',tag:'は',mem:'はく→把腳放進鞋裡',ex:'靴を履きます。'},
+  {jp:'箱',rd:'はこ',mn:'箱子',pos:'noun',tag:'は',mem:'はこ→裝東西的容器',ex:'箱に入れます。'},
+  {jp:'運ぶ',rd:'はこぶ',mn:'搬運',pos:'verb',tag:'は',mem:'はこぶ→把重物移動',ex:'荷物を運びます。'},
+  {jp:'箸',rd:'はし',mn:'筷子',pos:'noun',tag:'は',mem:'はし→夾食物的兩根棒',ex:'箸でご飯を食べます。'},
+  {jp:'場所',rd:'ばしょ',mn:'地點',pos:'noun',tag:'は',mem:'場所＝特定的位置',ex:'場所を決めます。'},
+  {jp:'バス停',rd:'ばすてい',mn:'公車站',pos:'noun',tag:'は',mem:'バス＋停＝公車停靠處',ex:'バス停で待ちます。'},
+  {jp:'働く',rd:'はたらく',mn:'工作',pos:'verb',tag:'は',mem:'はたらく→勤勞地工作',ex:'毎日働きます。'},
+  {jp:'葉っぱ',rd:'はっぱ',mn:'樹葉',pos:'noun',tag:'は',mem:'はっぱ→樹上的葉子',ex:'葉っぱが落ちます。'},
+  {jp:'花見',rd:'はなみ',mn:'賞花',pos:'noun',tag:'は',mem:'花見＝看花的活動',ex:'花見をします。'},
+  {jp:'花屋',rd:'はなや',mn:'花店',pos:'noun',tag:'は',mem:'花＋屋＝賣花的店',ex:'花屋で花を買います。'},
+  {jp:'払う',rd:'はらう',mn:'支付',pos:'verb',tag:'は',mem:'はらう→付錢',ex:'お金を払います。'},
+  {jp:'貼る',rd:'はる',mn:'貼上',pos:'verb',tag:'は',mem:'はる→用膠水貼上去',ex:'ポスターを貼ります。'},
+  {jp:'晴れ',rd:'はれ',mn:'晴天',pos:'noun',tag:'は',mem:'はれ→太陽出來的天氣',ex:'今日は晴れです。'},
+  {jp:'ハンカチ',rd:'ハンカチ',mn:'手帕',pos:'noun',tag:'は',mem:'handkerchief→擦手的布',ex:'ハンカチを持ちます。'},
+  {jp:'反対',rd:'はんたい',mn:'反對',pos:'noun',tag:'は',mem:'反対＝不同意',ex:'反対意見があります。'},
+  {jp:'パンツ',rd:'パンツ',mn:'褲子',pos:'noun',tag:'は',mem:'pants→下半身的衣服',ex:'パンツを履きます。'},
+  {jp:'ピアノ',rd:'ピアノ',mn:'鋼琴',pos:'noun',tag:'は',mem:'piano→有黑白鍵的樂器',ex:'ピアノを弾きます。'},
+  {jp:'冷える',rd:'ひえる',mn:'變冷',pos:'verb',tag:'は',mem:'ひえる→溫度下降變冷',ex:'体が冷えました。'},
+  {jp:'引く',rd:'ひく',mn:'拉',pos:'verb',tag:'は',mem:'ひく→把東西拉過來',ex:'ドアを引きます。'},
+  {jp:'非常に',rd:'ひじょうに',mn:'非常',pos:'adv',tag:'は',mem:'非常に＝程度極高',ex:'非常に大切です。'},
+  {jp:'左',rd:'ひだり',mn:'左邊',pos:'noun',tag:'は',mem:'ひだり→心臟那一側',ex:'左に曲がります。'},
+  {jp:'びっくり',rd:'びっくり',mn:'嚇一跳',pos:'adv',tag:'は',mem:'びっくり→突然受到驚嚇',ex:'びっくりしました！'},
+  {jp:'引っ越す',rd:'ひっこす',mn:'搬家',pos:'verb',tag:'は',mem:'引っ越し＝搬到新住所',ex:'来月引っ越します。'},
+  {jp:'必要',rd:'ひつよう',mn:'必要的',pos:'adj',tag:'は',mem:'必要＝不可缺少的',ex:'お金が必要です。'},
+  {jp:'紐',rd:'ひも',mn:'繩子',pos:'noun',tag:'は',mem:'ひも→細細的繩',ex:'紐で縛ります。'},
+  {jp:'昼寝',rd:'ひるね',mn:'午睡',pos:'noun',tag:'は',mem:'昼＋寝＝白天睡覺',ex:'昼寝をします。'},
+  {jp:'拾う',rd:'ひろう',mn:'撿起',pos:'verb',tag:'は',mem:'ひろう→把地上的撿起來',ex:'ゴミを拾います。'},
+  {jp:'封筒',rd:'ふうとう',mn:'信封',pos:'noun',tag:'は',mem:'封筒＝裝信的袋子',ex:'封筒に入れます。'},
+  {jp:'プール',rd:'プール',mn:'游泳池',pos:'noun',tag:'は',mem:'pool→裝水的游泳設施',ex:'プールで泳ぎます。'},
+  {jp:'増える',rd:'ふえる',mn:'增加',pos:'verb',tag:'は',mem:'ふえる→數量變多了',ex:'人口が増えます。'},
+  {jp:'深い',rd:'ふかい',mn:'深的',pos:'adj',tag:'は',mem:'ふかい→深度大',ex:'川が深いです。'},
+  {jp:'復習',rd:'ふくしゅう',mn:'複習',pos:'noun',tag:'は',mem:'復習＝再次學習',ex:'授業の復習をします。'},
+  {jp:'袋',rd:'ふくろ',mn:'袋子',pos:'noun',tag:'は',mem:'ふくろ→裝東西的軟容器',ex:'袋に入れます。'},
+  {jp:'部長',rd:'ぶちょう',mn:'部長',pos:'noun',tag:'は',mem:'部＋長＝部門主管',ex:'部長に報告します。'},
+  {jp:'太い',rd:'ふとい',mn:'粗的',pos:'adj',tag:'は',mem:'ふとい→直徑大',ex:'この木は太いです。'},
+  {jp:'太る',rd:'ふとる',mn:'變胖',pos:'verb',tag:'は',mem:'ふとる→體重增加',ex:'太りたくないです。'},
+  {jp:'船',rd:'ふね',mn:'船',pos:'noun',tag:'は',mem:'ふね→在水上行駛的交通工具',ex:'船で島に行きます。'},
+  {jp:'不便',rd:'ふべん',mn:'不方便的',pos:'adj',tag:'は',mem:'不便＝使用起來不方便',ex:'交通が不便です。'},
+  {jp:'踏む',rd:'ふむ',mn:'踩',pos:'verb',tag:'は',mem:'ふむ→用腳踩下去',ex:'花を踏まないでください。'},
+  {jp:'プレゼント',rd:'プレゼント',mn:'禮物',pos:'noun',tag:'は',mem:'present→給別人的禮',ex:'プレゼントを渡します。'},
+  {jp:'文化',rd:'ぶんか',mn:'文化',pos:'noun',tag:'は',mem:'文化＝某地方的傳統習俗',ex:'日本文化を学びます。'},
+  {jp:'平日',rd:'へいじつ',mn:'平日',pos:'noun',tag:'は',mem:'平日＝週一到週五',ex:'平日に行きます。'},
+  {jp:'下手',rd:'へた',mn:'不擅長的',pos:'adj',tag:'は',mem:'下手＝技術不好',ex:'料理が下手です。'},
+  {jp:'ベッド',rd:'ベッド',mn:'床',pos:'noun',tag:'は',mem:'bed→睡覺的地方',ex:'ベッドで寝ます。'},
+  {jp:'ペット',rd:'ペット',mn:'寵物',pos:'noun',tag:'は',mem:'pet→在家飼養的動物',ex:'ペットを飼います。'},
+  {jp:'返事',rd:'へんじ',mn:'回覆',pos:'noun',tag:'は',mem:'返事＝回應對方',ex:'返事をください。'},
+  {jp:'貿易',rd:'ぼうえき',mn:'貿易',pos:'noun',tag:'は',mem:'貿易＝國際間買賣',ex:'貿易会社に勤めています。'},
+  {jp:'他',rd:'ほか',mn:'其他',pos:'noun',tag:'は',mem:'ほか＝除此之外的',ex:'他にもあります。'},
+  {jp:'僕',rd:'ぼく',mn:'我（男）',pos:'noun',tag:'は',mem:'ぼく→男生說的我',ex:'僕は学生です。'},
+  {jp:'星',rd:'ほし',mn:'星星',pos:'noun',tag:'は',mem:'ほし→夜空的亮點',ex:'星が綺麗です。'},
+  {jp:'ポスター',rd:'ポスター',mn:'海報',pos:'noun',tag:'は',mem:'poster→貼在牆上的大圖',ex:'ポスターを貼ります。'},
+  {jp:'ポスト',rd:'ポスト',mn:'郵筒',pos:'noun',tag:'は',mem:'post→投遞信件的筒',ex:'ポストに投函します。'},
+  {jp:'ボタン',rd:'ボタン',mn:'按鈕',pos:'noun',tag:'は',mem:'button→按下去的東西',ex:'ボタンを押します。'},
+  {jp:'褒める',rd:'ほめる',mn:'稱讚',pos:'verb',tag:'は',mem:'ほめる→說對方好話',ex:'先生に褒められました。'},
+  {jp:'本棚',rd:'ほんだな',mn:'書架',pos:'noun',tag:'は',mem:'本＋棚＝放書的架子',ex:'本棚に本を並べます。'},
+  {jp:'本当',rd:'ほんとう',mn:'真的',pos:'adj',tag:'は',mem:'本当＝事實、真相',ex:'本当ですか？'},
+  {jp:'曲がる',rd:'まがる',mn:'轉彎',pos:'verb',tag:'ま',mem:'まがる→方向改變',ex:'角を曲がります。'},
+  {jp:'巻き寿司',rd:'まきすし',mn:'壽司捲',pos:'noun',tag:'ま',mem:'巻き＝捲起來的壽司',ex:'巻き寿司を作ります。'},
+  {jp:'真面目',rd:'まじめ',mn:'認真的',pos:'adj',tag:'ま',mem:'まじめ→做事認真負責',ex:'真面目な学生です。'},
+  {jp:'まだ',rd:'まだ',mn:'還・尚未',pos:'adv',tag:'ま',mem:'まだ→事情還沒完成',ex:'まだ終わっていません。'},
+  {jp:'間違う',rd:'まちがう',mn:'弄錯（自）',pos:'verb',tag:'ま',mem:'まちがう→不正確',ex:'間違いました。'},
+  {jp:'間違える',rd:'まちがえる',mn:'弄錯（他）',pos:'verb',tag:'ま',mem:'まちがえる→做了錯的',ex:'答えを間違えました。'},
+  {jp:'祭り',rd:'まつり',mn:'祭典',pos:'noun',tag:'ま',mem:'まつり→日本傳統慶典',ex:'お祭りに行きます。'},
+  {jp:'まで',rd:'まで',mn:'到……為止',pos:'expr',tag:'ま',mem:'まで＝到此為止的範圍',ex:'駅まで歩きます。'},
+  {jp:'までに',rd:'までに',mn:'在……之前',pos:'expr',tag:'ま',mem:'までに＝期限之前',ex:'5時までに帰ります。'},
+  {jp:'窓',rd:'まど',mn:'窗戶',pos:'noun',tag:'ま',mem:'まど→牆上透光的開口',ex:'窓を開けます。'},
+  {jp:'マナー',rd:'マナー',mn:'禮節',pos:'noun',tag:'ま',mem:'manner→禮貌的行為',ex:'マナーを守ります。'},
+  {jp:'間に合う',rd:'まにあう',mn:'來得及',pos:'verb',tag:'ま',mem:'まにあう→在時限前到達',ex:'電車に間に合いました。'},
+  {jp:'丸い',rd:'まるい',mn:'圓的',pos:'adj',tag:'ま',mem:'まるい→形狀是圓形',ex:'地球は丸いです。'},
+  {jp:'周り',rd:'まわり',mn:'周圍',pos:'noun',tag:'ま',mem:'まわり＝四周環境',ex:'周りを見ます。'},
+  {jp:'漫画',rd:'まんが',mn:'漫畫',pos:'noun',tag:'ま',mem:'漫画＝有圖有對話框',ex:'漫画を読みます。'},
+  {jp:'マンション',rd:'マンション',mn:'公寓大廈',pos:'noun',tag:'ま',mem:'mansion→大樓式住宅',ex:'マンションに住みます。'},
+  {jp:'右',rd:'みぎ',mn:'右邊',pos:'noun',tag:'ま',mem:'みぎ→筷子那一側',ex:'右に曲がります。'},
+  {jp:'見せる',rd:'みせる',mn:'給看',pos:'verb',tag:'ま',mem:'みせる→讓別人看到',ex:'写真を見せます。'},
+  {jp:'道',rd:'みち',mn:'道路',pos:'noun',tag:'ま',mem:'みち→走路或開車的地方',ex:'この道をまっすぐ行きます。'},
+  {jp:'見つかる',rd:'みつかる',mn:'被找到',pos:'verb',tag:'ま',mem:'みつかる→終於找到了',ex:'財布が見つかりました。'},
+  {jp:'見つける',rd:'みつける',mn:'找到',pos:'verb',tag:'ま',mem:'みつける→發現找到',ex:'お店を見つけました。'},
+  {jp:'港',rd:'みなと',mn:'港口',pos:'noun',tag:'ま',mem:'みなと→船停靠的地方',ex:'港に船が来ます。'},
+  {jp:'迎える',rd:'むかえる',mn:'迎接',pos:'verb',tag:'ま',mem:'むかえる→去接人',ex:'空港で迎えます。'},
+  {jp:'息子',rd:'むすこ',mn:'兒子',pos:'noun',tag:'ま',mem:'むすこ→自己的男孩子',ex:'息子が生まれました。'},
+  {jp:'娘',rd:'むすめ',mn:'女兒',pos:'noun',tag:'ま',mem:'むすめ→自己的女孩子',ex:'娘は学生です。'},
+  {jp:'もう',rd:'もう',mn:'已經',pos:'adv',tag:'ま',mem:'もう＝事情已經完成',ex:'もう終わりました。'},
+  {jp:'もうすぐ',rd:'もうすぐ',mn:'很快就要',pos:'adv',tag:'ま',mem:'もうすぐ＝快要到了',ex:'もうすぐ春です。'},
+  {jp:'もっと',rd:'もっと',mn:'更加',pos:'adv',tag:'ま',mem:'もっと＝程度再增加',ex:'もっと練習します。'},
+  {jp:'最も',rd:'もっとも',mn:'最',pos:'adv',tag:'ま',mem:'最も＝程度最高',ex:'最も大切なことです。'},
+  {jp:'戻る',rd:'もどる',mn:'返回',pos:'verb',tag:'ま',mem:'もどる→回到原來的地方',ex:'家に戻ります。'},
+  {jp:'八百屋',rd:'やおや',mn:'蔬果店',pos:'noun',tag:'ま',mem:'八百屋＝賣蔬菜水果的店',ex:'八百屋で野菜を買います。'},
+  {jp:'野球',rd:'やきゅう',mn:'棒球',pos:'noun',tag:'ま',mem:'野球＝在球場打的運動',ex:'野球を見ます。'},
+  {jp:'約束',rd:'やくそく',mn:'約定',pos:'noun',tag:'ま',mem:'約束を守る＝遵守承諾',ex:'約束を守ります。'},
+  {jp:'野菜',rd:'やさい',mn:'蔬菜',pos:'noun',tag:'ま',mem:'野菜＝植物類食材',ex:'野菜を食べます。'},
+  {jp:'やっと',rd:'やっと',mn:'終於',pos:'adv',tag:'ま',mem:'やっと＝歷經等待終於',ex:'やっと終わりました。'},
+  {jp:'止む',rd:'やむ',mn:'停止（雨）',pos:'verb',tag:'ま',mem:'やむ→雨停了',ex:'雨が止みました。'},
+  {jp:'止める',rd:'やめる',mn:'停止',pos:'verb',tag:'ま',mem:'やめる→停止做某事',ex:'仕事を止めます。'},
+  {jp:'やり方',rd:'やりかた',mn:'做法',pos:'noun',tag:'ま',mem:'やり方＝做事的方法',ex:'やり方を教えます。'},
+  {jp:'夕方',rd:'ゆうがた',mn:'傍晚',pos:'noun',tag:'ま',mem:'夕方＝下午到傍晚時段',ex:'夕方に帰ります。'},
+  {jp:'夕食',rd:'ゆうしょく',mn:'晚餐',pos:'noun',tag:'ま',mem:'夕食＝傍晚吃的一餐',ex:'夕食を食べます。'},
+  {jp:'浴衣',rd:'ゆかた',mn:'浴衣',pos:'noun',tag:'ま',mem:'浴衣→夏天的和服',ex:'お祭りで浴衣を着ます。'},
+  {jp:'輸出',rd:'ゆしゅつ',mn:'出口（貿易）',pos:'noun',tag:'ま',mem:'輸出＝把商品賣到國外',ex:'車を輸出します。'},
+  {jp:'ゆっくり',rd:'ゆっくり',mn:'慢慢地',pos:'adv',tag:'ま',mem:'ゆっくり＝速度緩慢',ex:'ゆっくり話してください。'},
+  {jp:'輸入',rd:'ゆにゅう',mn:'進口（貿易）',pos:'noun',tag:'ま',mem:'輸入＝從國外買進',ex:'食品を輸入します。'},
+  {jp:'指',rd:'ゆび',mn:'手指',pos:'noun',tag:'ま',mem:'ゆび→手上的五根',ex:'指を切りました。'},
+  {jp:'用意',rd:'ようい',mn:'準備',pos:'noun',tag:'ま',mem:'用意ができた＝準備好了',ex:'用意ができました。'},
+  {jp:'用事',rd:'ようじ',mn:'事情',pos:'noun',tag:'ま',mem:'用事がある＝有事要做',ex:'用事があります。'},
+  {jp:'洋服',rd:'ようふく',mn:'服裝',pos:'noun',tag:'ま',mem:'洋服＝西式的衣服',ex:'洋服を買います。'},
+  {jp:'ヨーグルト',rd:'ヨーグルト',mn:'優格',pos:'noun',tag:'ま',mem:'yogurt→發酵乳製品',ex:'朝にヨーグルトを食べます。'},
+  {jp:'よく',rd:'よく',mn:'經常',pos:'adv',tag:'ま',mem:'よく→頻率高或程度深',ex:'よく食べます。'},
+  {jp:'汚れる',rd:'よごれる',mn:'變髒',pos:'verb',tag:'ま',mem:'よごれる→沾上污漬',ex:'服が汚れました。'},
+  {jp:'よかった',rd:'よかった',mn:'太好了',pos:'expr',tag:'ま',mem:'よかった＝感到鬆一口氣',ex:'よかった！'},
+  {jp:'呼ぶ',rd:'よぶ',mn:'叫',pos:'verb',tag:'ま',mem:'よぶ→呼喚人過來',ex:'タクシーを呼びます。'},
+  {jp:'予報',rd:'よほう',mn:'預報',pos:'noun',tag:'ま',mem:'予報＝事先告知',ex:'天気予報を見ます。'},
+  {jp:'予約',rd:'よやく',mn:'預約',pos:'noun',tag:'ま',mem:'予約＝事先訂位',ex:'レストランを予約します。'},
+  {jp:'より',rd:'より',mn:'比（比較）',pos:'expr',tag:'ま',mem:'AよりB＝B比A還要',ex:'今日は昨日より暑いです。'},
+  {jp:'寄る',rd:'よる',mn:'順道',pos:'verb',tag:'ま',mem:'よる→順便去一下',ex:'コンビニに寄ります。'},
+  {jp:'喜ぶ',rd:'よろこぶ',mn:'高興',pos:'verb',tag:'ま',mem:'よろこぶ→心裡很開心',ex:'プレゼントをもらって喜びます。'},
+  {jp:'弱い',rd:'よわい',mn:'弱的',pos:'adj',tag:'ま',mem:'よわい→力量或體力不足',ex:'体が弱いです。'},
+  {jp:'理由',rd:'りゆう',mn:'理由',pos:'noun',tag:'ま',mem:'理由＝事情的原因',ex:'理由を教えてください。'},
+  {jp:'利用',rd:'りよう',mn:'使用',pos:'noun',tag:'ま',mem:'利用＝好好地使用',ex:'バスを利用します。'},
+  {jp:'料金',rd:'りょうきん',mn:'費用',pos:'noun',tag:'ま',mem:'料金＝使用的費用',ex:'料金を払います。'},
+  {jp:'両方',rd:'りょうほう',mn:'兩方',pos:'noun',tag:'ま',mem:'両方＝兩個都',ex:'両方好きです。'},
+  {jp:'旅館',rd:'りょかん',mn:'日式旅館',pos:'noun',tag:'ま',mem:'旅館＝日式住宿',ex:'旅館に泊まります。'},
+  {jp:'旅行',rd:'りょこう',mn:'旅行',pos:'noun',tag:'ま',mem:'旅行＝到遠地遊玩',ex:'旅行が好きです。'},
+  {jp:'ルール',rd:'ルール',mn:'規則',pos:'noun',tag:'ま',mem:'rule→必須遵守的規定',ex:'ルールを守ります。'},
+  {jp:'冷蔵庫',rd:'れいぞうこ',mn:'冰箱',pos:'noun',tag:'ま',mem:'冷蔵＋庫＝冷藏的箱',ex:'冷蔵庫に入れます。'},
+  {jp:'歴史',rd:'れきし',mn:'歷史',pos:'noun',tag:'ま',mem:'歴史＝過去發生的事',ex:'日本の歴史を学びます。'},
+  {jp:'レジ',rd:'レジ',mn:'收銀台',pos:'noun',tag:'ま',mem:'register→結帳的地方',ex:'レジで払います。'},
+  {jp:'レポート',rd:'レポート',mn:'報告',pos:'noun',tag:'ま',mem:'report→書面報告',ex:'レポートを書きます。'},
+  {jp:'練習',rd:'れんしゅう',mn:'練習',pos:'noun',tag:'ま',mem:'練習＝反覆做以變熟練',ex:'毎日練習します。'},
+  {jp:'連絡',rd:'れんらく',mn:'聯絡',pos:'noun',tag:'ま',mem:'連絡＝取得聯繫',ex:'連絡してください。'},
+  {jp:'廊下',rd:'ろうか',mn:'走廊',pos:'noun',tag:'ま',mem:'廊下＝房間外的通道',ex:'廊下を歩きます。'},
+  {jp:'ロボット',rd:'ロボット',mn:'機器人',pos:'noun',tag:'ま',mem:'robot→自動化的機器',ex:'ロボットを作ります。'},
+  {jp:'若い',rd:'わかい',mn:'年輕的',pos:'adj',tag:'ま',mem:'わかい→年齡小',ex:'若い人が多いです。'},
+  {jp:'沸かす',rd:'わかす',mn:'燒開水',pos:'verb',tag:'ま',mem:'わかす→把水燒到沸騰',ex:'お湯を沸かします。'},
+  {jp:'和食',rd:'わしょく',mn:'日本料理',pos:'noun',tag:'ま',mem:'和食＝日式的食物',ex:'和食が好きです。'},
+  {jp:'忘れ物',rd:'わすれもの',mn:'忘記帶的東西',pos:'noun',tag:'ま',mem:'忘れ＋物＝落下的東西',ex:'忘れ物に気をつけてください。'},
+  {jp:'渡す',rd:'わたす',mn:'遞交',pos:'verb',tag:'ま',mem:'わたす→把東西給對方',ex:'書類を渡します。'},
+  {jp:'笑う',rd:'わらう',mn:'笑',pos:'verb',tag:'ま',mem:'わらう→臉上露出笑容',ex:'みんなで笑います。'},
+  {jp:'割る',rd:'わる',mn:'打破',pos:'verb',tag:'ま',mem:'わる→讓東西碎掉',ex:'コップを割りました。'},
+  // ── 新増 ──
+  {jp:'かなり',rd:'かなり',mn:'相當',pos:'adv',tag:'新',mem:'かなり→程度比想像高',ex:'この本はかなり面白いです。'},
+  {jp:'けっこう',rd:'けっこう',mn:'頗為',pos:'adv',tag:'新',mem:'けっこう→還不錯、蠻好的',ex:'このレストランはけっこう美味しいです。'},
+  {jp:'ずいぶん',rd:'ずいぶん',mn:'非常',pos:'adv',tag:'新',mem:'ずいぶん→比預想還要更多',ex:'今日はずいぶん寒いですね。'},
+  {jp:'たしかに',rd:'たしかに',mn:'確實',pos:'adv',tag:'新',mem:'たしかに→的確如此',ex:'彼の言うことはたしかに正しいです。'},
+  {jp:'たいてい',rd:'たいてい',mn:'大多時候',pos:'adv',tag:'新',mem:'たいてい→大部分的情況',ex:'日曜日はたいてい家にいます。'},
+  {jp:'ほとんど',rd:'ほとんど',mn:'幾乎',pos:'adv',tag:'新',mem:'ほとんど→差不多全部',ex:'宿題はほとんど終わりました。'},
+  {jp:'このごろ',rd:'このごろ',mn:'近來',pos:'adv',tag:'新',mem:'このごろ＝最近這段時間',ex:'このごろ、よく雨が降ります。'},
+  {jp:'まず',rd:'まず',mn:'首先',pos:'adv',tag:'新',mem:'まず＝第一步先做的事',ex:'まず、手を洗ってください。'},
+  {jp:'しっかり',rd:'しっかり',mn:'確實',pos:'adv',tag:'新',mem:'しっかり→紮實、確實地',ex:'ドアをしっかり閉めてください。'},
+  {jp:'はっきり',rd:'はっきり',mn:'清楚',pos:'adv',tag:'新',mem:'はっきり→清晰、明確地說',ex:'もっとはっきり言ってください。'},
+  {jp:'もちろん',rd:'もちろん',mn:'當然',pos:'adv',tag:'新',mem:'もちろん＝理所當然',ex:'明日のパーティー、もちろん行きますよ。'},
+  {jp:'なるべく',rd:'なるべく',mn:'盡可能',pos:'adv',tag:'新',mem:'なるべく＝能做到的範圍內',ex:'なるべく早く来てください。'},
+  {jp:'ちゃんと',rd:'ちゃんと',mn:'好好地',pos:'adv',tag:'新',mem:'ちゃんと→認真做好',ex:'毎日ちゃんと野菜を食べていますか。'},
+  {jp:'うれしい',rd:'うれしい',mn:'高興的',pos:'adj',tag:'新',mem:'うれしい→心裡很開心',ex:'うれしい知らせがありました。'},
+  {jp:'かなしい',rd:'かなしい',mn:'悲傷的',pos:'adj',tag:'新',mem:'かなしい→心裡很難過',ex:'かなしい映画を見ました。'},
+  {jp:'すばらしい',rd:'すばらしい',mn:'很棒的',pos:'adj',tag:'新',mem:'すばらしい→令人讚嘆',ex:'すばらしい景色ですね。'},
+  {jp:'詳しい',rd:'くわしい',mn:'詳細的',pos:'adj',tag:'新',mem:'くわしい→說明很仔細',ex:'詳しい説明をします。'},
+  {jp:'優しい',rd:'やさしい',mn:'溫柔的',pos:'adj',tag:'新',mem:'やさしい→對人親切溫和',ex:'優しい人が好きです。'},
+  {jp:'細い',rd:'ほそい',mn:'細的',pos:'adj',tag:'新',mem:'ほそい→直徑小或很瘦',ex:'細い糸を使います。'},
+  {jp:'急な',rd:'きゅうな',mn:'突然的',pos:'adj',tag:'新',mem:'急な用事＝突然的急事',ex:'急な用事ができました。'},
+  {jp:'自由',rd:'じゆう',mn:'自由的',pos:'adj',tag:'新',mem:'自由な時間＝自由的時間',ex:'自由な時間があります。'},
+  {jp:'安全',rd:'あんぜん',mn:'安全的',pos:'adj',tag:'新',mem:'安全な場所＝安全的地方',ex:'安全な場所です。'},
+  {jp:'便利',rd:'べんり',mn:'方便的',pos:'adj',tag:'新',mem:'便利な道具＝方便的工具',ex:'便利な道具です。'},
+  {jp:'特別',rd:'とくべつ',mn:'特別的',pos:'adj',tag:'新',mem:'特別な日＝特別的日子',ex:'特別な日です。'},
+  {jp:'盛ん',rd:'さかん',mn:'盛行的',pos:'adj',tag:'新',mem:'盛んなスポーツ＝盛行的運動',ex:'盛んなスポーツです。'},
+];
+
+// ══════════════════════════════════════════
+//  工具函式
+// ══════════════════════════════════════════
+function sh(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function $(id){return document.getElementById(id);}
+function tagH(w){const t=TC[w.pos]||{l:'其他',bg:'rgba(170,170,170,0.15)',cl:'#aaa'};return`<span class="c-tag" style="background:${t.bg};color:${t.cl}">${t.l}</span>`;}
+function speak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP';u.rate=0.85;u.pitch=1;
+  const jp=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('ja'));
+  if(jp)u.voice=jp;
+  window.speechSynthesis.speak(u);
+}
+
+// ★ Toast 提示
+function showToast(msg){
+  const t=$('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  狀態
+// ══════════════════════════════════════════
+let section='vocab',activeTag='all',vMode='flash';
+let pool=[...VOCAB],vi=0,vFlipped=false;
+let vKnown=new Set(),vForgot=new Set(),vHistory=[];
+let vMissCount={};  // ★ 不熟次數
+let qPool=[],qi=0,qAnswered=false;
+let kPool=[],ki=0,kFlipped=false;
+let kKnown=new Set(),kForgot=new Set(),kHistory=[];
+let kkPool=[],kki=0,kkAnswered=false;
+let kmPool=[],kmi=0,kmAnswered=false;
+let lPool=[],li=0,lHistory=[];
+let lKnown=new Set(),lForgot=new Set();
+let rTab='vocab';
+
+// ══════════════════════════════════════════
+//  localStorage
+// ══════════════════════════════════════════
+function save(){
+  try{
+    localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));
+    localStorage.setItem('n4_vF',JSON.stringify([...vForgot]));
+    localStorage.setItem('n4_mc',JSON.stringify(vMissCount));
+    localStorage.setItem('n4_kK',JSON.stringify([...kKnown]));
+    localStorage.setItem('n4_kF',JSON.stringify([...kForgot]));
+    localStorage.setItem('n4_lK',JSON.stringify([...lKnown]));
+    localStorage.setItem('n4_lF',JSON.stringify([...lForgot]));
+  }catch(e){}
+}
+function load(){
+  try{
+    const vk=localStorage.getItem('n4_vK');if(vk)vKnown=new Set(JSON.parse(vk));
+    const vf=localStorage.getItem('n4_vF');if(vf)vForgot=new Set(JSON.parse(vf));
+    const mc=localStorage.getItem('n4_mc');if(mc)vMissCount=JSON.parse(mc);
+    const kk=localStorage.getItem('n4_kK');if(kk)kKnown=new Set(JSON.parse(kk));
+    const kf=localStorage.getItem('n4_kF');if(kf)kForgot=new Set(JSON.parse(kf));
+    const lk=localStorage.getItem('n4_lK');if(lk)lKnown=new Set(JSON.parse(lk));
+    const lf=localStorage.getItem('n4_lF');if(lf)lForgot=new Set(JSON.parse(lf));
+  }catch(e){}
+}
+function resetAll(){
+  if(!confirm('確定要重置所有進度嗎？'))return;
+  [vKnown,vForgot,kKnown,kForgot,lKnown,lForgot].forEach(s=>s.clear());
+  vHistory=[];kHistory=[];lHistory=[];vi=0;ki=0;li=0;vMissCount={};
+  try{localStorage.clear();}catch(e){}
+  updateVStats();updateKStats();updateLStats();
+  renderCard();renderKanaCard();
+  showToast('✓ 已重置所有進度');
+}
+
+// ══════════════════════════════════════════
+//  導航
+// ══════════════════════════════════════════
+function setSection(s){
+  section=s;
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  $('s-'+s).classList.add('active');$('n-'+s).classList.add('active');
+  if(s==='listen'){lPool=sh([...pool]);li=0;lHistory=[];renderListen();}
+  if(s==='review')renderReview();
+  if(s==='kana'){buildKPool();renderKanaCard();}
+}
+
+// ══════════════════════════════════════════
+//  單字 – 抽認卡
+// ══════════════════════════════════════════
+function buildPool(){
+  pool=activeTag==='all'?[...VOCAB]:VOCAB.filter(w=>w.tag===activeTag);
+  vi=0;vFlipped=false;vHistory=[];
+  $('vocab-count').textContent=pool.length+' 個';
+  updateVStats();
+}
+function renderFTags(){
+  $('ftags').innerHTML=TAGS.map(t=>{
+    const cnt=t.k==='all'?VOCAB.length:VOCAB.filter(w=>w.tag===t.k).length;
+    return`<button class="ftag ${activeTag===t.k?'on':''}" onclick="setTag('${t.k}')">${t.l}(${cnt})</button>`;
+  }).join('');
+}
+function setTag(t){
+  activeTag=t;buildPool();renderFTags();
+  vKnown.clear();vForgot.clear();
+  if(vMode==='flash')renderCard();
+  else{qPool=sh([...pool]);qi=0;renderQCard();}
+  lPool=sh([...pool]);li=0;
+}
+function setVMode(m){
+  vMode=m;
+  ['flash','quiz'].forEach(x=>{
+    $('vm-'+x+'-div').style.display=x===m?'block':'none';
+    $('vm-'+x).classList.toggle('active',x===m);
+  });
+  if(m==='flash'){vi=0;vFlipped=false;vKnown.clear();vForgot.clear();vHistory=[];updateVStats();renderCard();}
+  else{qPool=sh([...pool]);qi=0;qAnswered=false;renderQCard();}
+}
+
+// ★ 渲染不熟次數點點
+function missDotsHTML(rd){
+  const c=Math.min(vMissCount[rd]||0,5);
+  if(c===0)return'';
+  let dots='';
+  for(let i=0;i<5;i++) dots+=`<div class="miss-dot ${i<c?'filled':''}"></div>`;
+  return`<div class="miss-tracker">${dots}<span class="miss-count">${c}/5${c>=5?' ⭐':''}</span></div>`;
+}
+
+function renderCard(){
+  if($('v-prev'))$('v-prev').style.opacity=vi===0?'0.3':'1';
+  if(vi>=pool.length){
+    $('cfront').innerHTML=`<div style="font-size:48px">🎉</div><div style="color:rgba(255,255,255,0.5);margin-top:0.5rem">這批全部完成！</div><div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:0.3rem">去「複習清單」看需要加強的</div>`;
+    $('cback').innerHTML='';$('vact').style.display='none';$('vflip').style.display='none';$('vhint').style.display='none';
+    $('vcnt').textContent=`${pool.length} / ${pool.length}`;return;
+  }
+  const w=pool[vi];
+
+  // ★ Gemini 優化：切換新卡時瞬間翻回正面，不顯示背面動畫
+  const card=$('ci');
+  vFlipped=false;
+  card.classList.add('no-transition');
+  card.classList.remove('flipped');
+  setTimeout(()=>card.classList.remove('no-transition'),20);
+
+  $('vact').style.display='none';$('vflip').style.display='flex';$('vhint').style.display='block';
+  $('vcnt').textContent=`${vi+1} / ${pool.length}`;
+
+  $('cfront').innerHTML=`
+    ${tagH(w)}
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div>
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:36px;font-weight:700;letter-spacing:4px;text-align:center">${w.rd}</div>
+    ${missDotsHTML(w.rd)}
+    <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:0.5rem">點擊翻面確認漢字</div>`;
+
+  $('cback').innerHTML=`
+    ${tagH(w)}
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700;text-align:center">${w.jp}</div>
+    <div class="c-rd">${w.rd}</div>
+    <div class="c-mn">${w.mn}</div>
+    <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    <div class="ex-text">例：${w.ex}</div>`;
+}
+
+function flipCard(){
+  const card=$('ci');
+  vFlipped=!vFlipped;
+  card.classList.toggle('flipped',vFlipped);
+  if(vFlipped){$('vact').style.display='flex';$('vflip').style.display='none';$('vhint').style.display='none';}
+}
+
+function vAns(ok){
+  vHistory.push({idx:vi,ok});
+  if(ok){
+    vKnown.add(vi);
+    vForgot.delete(vi);
+  } else {
+    vForgot.add(vi);
+    vKnown.delete(vi);
+    const key=pool[vi].rd;
+    vMissCount[key]=(vMissCount[key]||0)+1;
+    // ★ 不熟5次 → 自動加星號
+    if(vMissCount[key]===5){
+      pool[vi].star=true;
+      showToast('⭐ 不熟5次！已加入重點複習！');
+    }
+  }
+  vi++;updateVStats();save();
+  // ★ 先翻回正面，等復位完成後再載入新卡，避免看到答案
+  const card=$('ci');
+  card.classList.add('no-transition');
+  card.classList.remove('flipped');
+  $('vact').style.display='none';
+  $('vflip').style.display='flex';
+  setTimeout(()=>{ card.classList.remove('no-transition'); renderCard(); },30);
+}
+
+function vPrev(){
+  if(vi===0)return;
+  const last=vHistory.pop();
+  if(last){if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);}
+  vi--;vFlipped=false;updateVStats();renderCard();
+}
+
+function updateVStats(){
+  const t=vKnown.size+vForgot.size;
+  $('sv-t').textContent=t;$('sv-k').textContent=vKnown.size;$('sv-f').textContent=vForgot.size;
+  $('vp').style.width=Math.round((t/Math.max(pool.length,1))*100)+'%';
+}
+function speakCurrent(){if(vi<pool.length)speak(pool[vi].rd);}
+
+// ══════════════════════════════════════════
+//  單字 – 測驗
+// ══════════════════════════════════════════
+function renderQCard(){
+  if(qi>=qPool.length){
+    $('qbox').innerHTML=`<div class="empty-state">🎊 完成！答對 ${vKnown.size}/${qPool.length}</div>
+    <button class="next-btn" onclick="qPool=sh([...pool]);qi=0;vKnown.clear();vForgot.clear();renderQCard()">再做一次</button>`;
+    return;
+  }
+  const w=qPool[qi];
+  const others=pool.filter(v=>v.jp!==w.jp);sh(others);
+  const opts=sh([w,...others.slice(0,3)]);
+  qAnswered=false;
+  $('qbox').innerHTML=`
+    <div class="q-word">${w.jp}</div>
+    <div class="q-sub">${w.rd} の意思は？</div>
+    <div class="q-opts" id="vopts"></div>
+    <div id="qr"></div>
+    <button class="next-btn" id="qn" style="display:none" onclick="qi++;renderQCard()">下一題 →</button>`;
+  // ★ 用 data-idx 避免特殊字元造成 onclick 斷裂
+  opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';
+    btn.textContent=o.mn;
+    btn.dataset.idx=i;
+    btn.addEventListener('click',()=>checkVQ(btn, o.mn, w.mn));
+    $('vopts').appendChild(btn);
+  });
+}
+function checkVQ(el,ch,co){
+  if(qAnswered)return;qAnswered=true;
+  const w=qPool[qi];
+  document.querySelectorAll('#vopts .q-opt').forEach(b=>b.disabled=true);
+  if(ch===co){
+    el.classList.add('ok');vKnown.add(qi);
+    $('qr').innerHTML=`<div class="q-res ok">✅ 正確！${w.mem}</div>`;
+  } else {
+    el.classList.add('ng');vForgot.add(qi);
+    document.querySelectorAll('#vopts .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});
+    $('qr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}<br>${w.mem}</div>`;
+  }
+  $('qn').style.display='block';updateVStats();save();
+}
+
+// ══════════════════════════════════════════
+//  假名練習
+// ══════════════════════════════════════════
+function buildKPool(){kPool=sh([...VOCAB]);ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();}
+function setKMode(m){
+  ['flash','kanji','meaning'].forEach(x=>{
+    $('km-'+x+'-div').style.display=x===m?'block':'none';
+    $('km-'+x).classList.toggle('active',x===m);
+  });
+  if(m==='flash'){ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();renderKanaCard();}
+  if(m==='kanji'){kkPool=sh([...VOCAB]);kki=0;kkAnswered=false;renderKanjiQuiz();}
+  if(m==='meaning'){kmPool=sh([...VOCAB]);kmi=0;kmAnswered=false;renderMeaningQuiz();}
+}
+function renderKanaCard(){
+  if(ki>=kPool.length){
+    $('kfront').innerHTML=`<div style="font-size:48px">🎉</div><div style="color:rgba(255,255,255,0.5)">全部完成！</div>`;
+    $('kback').innerHTML='';$('kact').style.display='none';$('kflip').style.display='none';$('khint').style.display='none';
+    $('kcnt').textContent=`${kPool.length}/${kPool.length}`;return;
+  }
+  const w=kPool[ki];
+
+  // ★ Gemini 優化：瞬間復位
+  const kcard=$('kci');
+  kFlipped=false;
+  kcard.classList.add('no-transition');
+  kcard.classList.remove('flipped');
+  setTimeout(()=>kcard.classList.remove('no-transition'),20);
+
+  $('kact').style.display='none';$('kflip').style.display='flex';$('khint').style.display='block';
+  $('kcnt').textContent=`${ki+1} / ${kPool.length}`;
+  $('kfront').innerHTML=`
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:0.5rem">這個讀音對應哪個漢字？</div>
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:40px;font-weight:700;letter-spacing:4px">${w.rd}</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
+  $('kback').innerHTML=`
+    ${tagH(w)}
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700">${w.jp}</div>
+    <div class="c-rd">${w.rd}</div>
+    <div class="c-mn">${w.mn}</div>
+    <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    <div class="ex-text">例：${w.ex}</div>`;
+}
+function flipKana(){
+  const kcard=$('kci');
+  kFlipped=!kFlipped;
+  kcard.classList.toggle('flipped',kFlipped);
+  if(kFlipped){$('kact').style.display='flex';$('kflip').style.display='none';$('khint').style.display='none';}
+}
+function kAns(ok){
+  kHistory.push({idx:ki,ok});if(ok)kKnown.add(ki);else kForgot.add(ki);ki++;updateKStats();save();
+  const kcard=$('kci');
+  kcard.classList.add('no-transition');
+  kcard.classList.remove('flipped');
+  $('kact').style.display='none';
+  $('kflip').style.display='flex';
+  setTimeout(()=>{ kcard.classList.remove('no-transition'); renderKanaCard(); },30);
+}
+function kPrev(){if(ki===0)return;const last=kHistory.pop();if(last){if(last.ok)kKnown.delete(last.idx);else kForgot.delete(last.idx);}ki--;kFlipped=false;updateKStats();renderKanaCard();}
+function updateKStats(){const t=kKnown.size+kForgot.size;$('sk-t').textContent=t;$('sk-k').textContent=kKnown.size;$('sk-f').textContent=kForgot.size;$('kp').style.width=Math.round((t/Math.max(kPool.length,1))*100)+'%';}
+function speakKana(){if(ki<kPool.length)speak(kPool[ki].rd);}
+
+function renderKanjiQuiz(){
+  if(kki>=kkPool.length){$('kquiz-kanji').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kkPool.length}</div><button class="next-btn" onclick="kkPool=sh([...VOCAB]);kki=0;kKnown.clear();kForgot.clear();renderKanjiQuiz()">再做一次</button>`;return;}
+  const w=kkPool[kki];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kkAnswered=false;
+  $('kquiz-kanji').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名對應哪個漢字？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub">${w.mn}</div><div class="q-opts" id="kkopts"></div><div id="kkr"></div><button class="next-btn" id="kkn" style="display:none" onclick="kki++;renderKanjiQuiz()">下一題 →</button>`;
+  opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';btn.textContent=o.jp;
+    btn.addEventListener('click',()=>checkKKQ(btn,o.jp,w.jp));
+    $('kkopts').appendChild(btn);
+  });
+}
+function checkKKQ(el,ch,co){if(kkAnswered)return;kkAnswered=true;const w=kkPool[kki];document.querySelectorAll('#kkopts .q-opt').forEach(b=>b.disabled=true);if(ch===co){el.classList.add('ok');kKnown.add(kki);$('kkr').innerHTML=`<div class="q-res ok">✅ 正確！${w.rd}=${w.jp}（${w.mn}）</div>`;}else{el.classList.add('ng');kForgot.add(kki);document.querySelectorAll('#kkopts .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kkr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}（${w.mn}）</div>`;}$('kkn').style.display='block';updateKStats();save();}
+
+function renderMeaningQuiz(){
+  if(kmi>=kmPool.length){$('kquiz-meaning').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kmPool.length}</div><button class="next-btn" onclick="kmPool=sh([...VOCAB]);kmi=0;kKnown.clear();kForgot.clear();renderMeaningQuiz()">再做一次</button>`;return;}
+  const w=kmPool[kmi];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kmAnswered=false;
+  $('kquiz-meaning').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名是什麼意思？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub" style="color:rgba(255,255,255,0.4)">${w.jp}</div><div class="q-opts" id="kmopts"></div><div id="kmr"></div><button class="next-btn" id="kmn" style="display:none" onclick="kmi++;renderMeaningQuiz()">下一題 →</button>`;
+  opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';btn.textContent=o.mn;
+    btn.addEventListener('click',()=>checkKMQ(btn,o.mn,w.mn));
+    $('kmopts').appendChild(btn);
+  });
+}
+function checkKMQ(el,ch,co){if(kmAnswered)return;kmAnswered=true;const w=kmPool[kmi];document.querySelectorAll('#kmopts .q-opt').forEach(b=>b.disabled=true);if(ch===co){el.classList.add('ok');kKnown.add(kmi);$('kmr').innerHTML=`<div class="q-res ok">✅ 正確！${w.rd}=${w.jp}（${w.mn}）</div>`;}else{el.classList.add('ng');kForgot.add(kmi);document.querySelectorAll('#kmopts .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kmr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}</div>`;}$('kmn').style.display='block';updateKStats();save();}
+
+// ══════════════════════════════════════════
+//  聽力練習
+// ══════════════════════════════════════════
+function renderListen(){
+  if(li>=lPool.length){
+    $('lcard').innerHTML=`<div class="listen-icon">🎊</div><p class="listen-hint">答對 ${lKnown.size}/${lPool.length}</p><button class="play-btn" onclick="li=0;lKnown.clear();lForgot.clear();lHistory=[];lPool=sh([...pool]);renderListen()">再來一次</button>`;
+    $('lact').style.display='none';$('lplay').style.display='none';return;
+  }
+  $('lnum').textContent=`${li+1} / ${lPool.length}`;
+  $('lreveal').style.display='none';$('lact').style.display='none';$('lplay').style.display='flex';
+  updateLStats();
+}
+function playListen(){if(li<lPool.length)speak(lPool[li].rd);}
+function showListen(){
+  const w=lPool[li];
+  $('lreveal').style.display='block';
+  $('lreveal').innerHTML=`<div class="l-jp">${w.jp}</div><div class="l-rd">${w.rd}</div><div class="l-mn">${w.mn}</div>`;
+  $('lact').style.display='flex';$('lplay').style.display='none';
+}
+function lAns(ok){lHistory.push({idx:li,ok});if(ok)lKnown.add(li);else lForgot.add(li);li++;updateLStats();save();renderListen();}
+function lPrev(){if(li===0)return;const last=lHistory.pop();if(last){if(last.ok)lKnown.delete(last.idx);else lForgot.delete(last.idx);}li--;updateLStats();renderListen();}
+function updateLStats(){const t=lKnown.size+lForgot.size;$('sl-t').textContent=t;$('sl-k').textContent=lKnown.size;$('sl-f').textContent=lForgot.size;$('lp').style.width=Math.round((t/Math.max(lPool.length,1))*100)+'%';}
+
+// ══════════════════════════════════════════
+//  複習清單（含不熟次數顯示）
+// ══════════════════════════════════════════
+function setRTab(t){
+  rTab=t;
+  ['vocab','kana'].forEach(x=>{$('rv-'+x).style.display=x===t?'block':'none';$('rt-'+x).classList.toggle('active',x===t);});
+}
+function renderReview(){
+  // 單字複習：包含所有被標「不熟」的 + 星號單字
+  const vlist=[...vForgot].map(i=>pool[i]).filter(Boolean);
+  const starList=VOCAB.filter(w=>w.star&&!vlist.includes(w));
+  const combined=[...vlist,...starList];
+
+  $('rv-vocab').innerHTML=combined.length===0
+    ?`<div class="empty-state">🎉 沒有需要複習的單字！</div>`
+    :combined.map(w=>{
+      const mc=vMissCount[w.rd]||0;
+      return`<div class="rev-item">
+        <div class="rev-row">${tagH(w)}<span class="rev-jp">${w.jp}</span><span class="rev-rd">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div>
+        <div class="rev-mn">${w.mn}</div>
+        ${mc>0?`<div class="rev-miss">${'●'.repeat(Math.min(mc,5))} 不熟 ${mc} 次${w.star?' ⭐':''}</div>`:''}
+        <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+      </div>`;
+    }).join('');
+
+  const klist=[...kForgot].map(i=>kPool[i]).filter(Boolean);
+  $('rv-kana').innerHTML=klist.length===0
+    ?`<div class="empty-state">🎉 沒有需要複習的假名！</div>`
+    :klist.map(w=>`<div class="rev-item">
+      <div class="rev-row"><span class="rev-jp" style="font-size:20px;letter-spacing:2px">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:4px">${w.jp}</div>
+      <div class="rev-mn">${w.mn}</div>
+      <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  初始化
+// ══════════════════════════════════════════
+load();
+renderFTags();
+buildPool();
+renderCard();
+buildKPool();
+lPool=sh([...VOCAB]);
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>{};
+}
+</script>
+</body>
+</html>

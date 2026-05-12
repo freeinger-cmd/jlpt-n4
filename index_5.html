@@ -11,23 +11,33 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','Noto Sans TC',sans-serif;min-height:100vh;padding-bottom:70px;}
+
+/* ── 底部導航 ── */
 .nav{position:fixed;bottom:0;left:0;right:0;background:#13132a;border-top:1px solid #2a2a4a;display:flex;z-index:100;}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;font-size:10px;color:#666;cursor:pointer;transition:color .2s;}
 .nav-item.active{color:#7c6af7;}
 .nav-item .ni{font-size:20px;margin-bottom:2px;}
+
+/* ── 頁面區塊 ── */
 .section{display:none;padding:0 0 16px;}
 .section.active{display:block;}
 .hdr{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;}
 .hdr-title{font-size:22px;font-weight:800;}
 .hdr-count{background:#1e1e3a;border-radius:20px;padding:4px 12px;font-size:12px;color:#aaa;}
+
+/* ── 分組 Tab ── */
 .ftags-wrap{overflow-x:auto;padding:0 16px 8px;scrollbar-width:none;}
 .ftags-wrap::-webkit-scrollbar{display:none;}
 .ftags{display:flex;gap:8px;width:max-content;}
 .ftag{background:#1a1a30;border:1px solid #2a2a4a;color:#888;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:inherit;}
 .ftag.on{background:#7c6af7;border-color:#7c6af7;color:#fff;}
+
+/* ── 模式切換 ── */
 .mode-tabs{display:flex;background:#13132a;border-radius:12px;margin:0 16px 12px;padding:4px;}
 .mode-tab{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;color:#888;transition:all .2s;font-family:inherit;border:none;background:none;}
 .mode-tab.active{background:#7c6af7;color:#fff;font-weight:700;}
+
+/* ── 統計列 ── */
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 16px 12px;}
 .stat{background:#13132a;border-radius:12px;padding:10px;text-align:center;}
 .stat-num{font-size:24px;font-weight:800;}
@@ -35,46 +45,80 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
 .stat-num.green{color:#6af7b8;}
 .stat-num.red{color:#f76a6a;}
 .stat-label{font-size:11px;color:#666;margin-top:2px;}
+
+/* ── 進度條 ── */
 .prog-wrap{margin:0 16px 12px;background:#1a1a30;border-radius:8px;height:4px;overflow:hidden;}
 .prog-bar{height:100%;background:linear-gradient(90deg,#7c6af7,#6af7b8);border-radius:8px;transition:width .4s;}
+
+/* ── 卡片導航 ── */
 .card-nav{display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;}
 .cnav-btn{background:#1a1a30;border:1px solid #2a2a4a;color:#aaa;border-radius:10px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit;}
 .card-cnt{font-size:14px;color:#888;}
 .cnav-flip{background:#7c6af7;border:none;color:#fff;border-radius:10px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* ── 抽認卡（翻牌動畫）── */
 .card-wrap{padding:0 16px;perspective:1000px;}
-.card-inner{position:relative;width:100%;height:260px;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1);cursor:pointer;border-radius:20px;}
+.card-inner{
+  position:relative;width:100%;height:270px;
+  transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;border-radius:20px;
+}
+/* ★ Gemini 優化：切換新卡片時瞬間復位，避免看到背面 */
+.card-inner.no-transition{transition:none!important;}
 .card-inner.flipped{transform:rotateY(180deg);}
-.card-inner.flipping .card-back{visibility:hidden;}
-.card-inner.flipping.flipped .card-back{visibility:visible;}
-.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1a1a35 0%,#13132a 100%);border:1px solid #2a2a4a;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+
+.card-face{
+  position:absolute;width:100%;height:100%;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:20px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(135deg,#1a1a35 0%,#13132a 100%);
+  border:1px solid #2a2a4a;box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
 .card-back{transform:rotateY(180deg);}
-.c-tag{font-size:11px;border-radius:20px;padding:3px 10px;font-weight:700;margin-bottom:8px;}
-.c-jp{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-weight:700;color:#fff;text-align:center;line-height:1.3;}
+
+/* ── 卡片內容 ── */
+.c-tag{font-size:11px;border-radius:20px;padding:3px 10px;font-weight:700;margin-bottom:6px;}
 .c-rd{font-size:15px;color:#9a9aff;text-align:center;letter-spacing:2px;margin-top:4px;}
 .c-mn{font-size:18px;font-weight:700;color:#6af7b8;text-align:center;margin-top:6px;}
-.mem-box{background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.3);border-radius:10px;padding:8px 12px;margin-top:8px;width:100%;}
+.mem-box{background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);border-radius:10px;padding:8px 12px;margin-top:8px;width:100%;}
 .mem-label{font-size:10px;color:#7c6af7;font-weight:700;margin-bottom:2px;}
 .mem-text{font-size:12px;color:#ccc;line-height:1.5;}
 .ex-text{font-size:11px;color:#888;text-align:center;margin-top:6px;line-height:1.6;}
+
+/* ★ 不熟次數追蹤點點 */
+.miss-tracker{display:flex;align-items:center;gap:5px;margin-top:8px;}
+.miss-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #f76a6a;background:transparent;transition:background .2s;}
+.miss-dot.filled{background:#f76a6a;}
+.miss-count{font-size:11px;color:#f76a6a;margin-left:2px;}
+
+/* ── 卡片提示 ── */
 .card-hint{text-align:center;font-size:11px;color:#444;padding:8px 0 0;}
+
+/* ── 按鈕列 ── */
 .vact{display:none;gap:10px;padding:12px 16px 0;}
 .vact-btn{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
-.vact-btn.ok{background:rgba(106,247,184,0.15);color:#6af7b8;border:1px solid #6af7b8;}
-.vact-btn.ng{background:rgba(247,106,106,0.15);color:#f76a6a;border:1px solid #f76a6a;}
+.vact-btn.ok{background:rgba(106,247,184,.15);color:#6af7b8;border:1px solid #6af7b8;}
+.vact-btn.ng{background:rgba(247,106,106,.15);color:#f76a6a;border:1px solid #f76a6a;}
 .vflip{display:flex;gap:10px;padding:12px 16px 0;}
 .speak-btn{background:#1a1a30;border:1px solid #2a2a4a;color:#aaa;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;flex:1;}
 .flip-btn{background:#7c6af7;border:none;color:#fff;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;flex:2;font-weight:700;}
+
+/* ── 測驗模式 ── */
 .qbox{padding:0 16px;}
 .q-word{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:32px;font-weight:700;text-align:center;margin-bottom:4px;}
 .q-sub{font-size:13px;color:#888;text-align:center;margin-bottom:16px;}
 .q-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .q-opt{background:#1a1a30;border:1px solid #2a2a4a;color:#ddd;border-radius:12px;padding:12px 8px;font-size:13px;cursor:pointer;font-family:inherit;}
-.q-opt.ok{background:rgba(106,247,184,0.2);border-color:#6af7b8;color:#6af7b8;}
-.q-opt.ng{background:rgba(247,106,106,0.2);border-color:#f76a6a;color:#f76a6a;}
+.q-opt.ok{background:rgba(106,247,184,.2);border-color:#6af7b8;color:#6af7b8;}
+.q-opt.ng{background:rgba(247,106,106,.2);border-color:#f76a6a;color:#f76a6a;}
 .q-res{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:8px;line-height:1.6;}
-.q-res.ok{background:rgba(106,247,184,0.1);color:#6af7b8;}
-.q-res.ng{background:rgba(247,106,106,0.1);color:#f76a6a;}
+.q-res.ok{background:rgba(106,247,184,.1);color:#6af7b8;}
+.q-res.ng{background:rgba(247,106,106,.1);color:#f76a6a;}
 .next-btn{width:100%;padding:12px;background:#7c6af7;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;}
+
+/* ── 複習清單 ── */
 .empty-state{text-align:center;padding:40px 20px;color:#666;font-size:15px;line-height:2;}
 .rtabs{display:flex;gap:8px;padding:0 16px 12px;}
 .rtab{background:#1a1a30;border:1px solid #2a2a4a;color:#888;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:inherit;}
@@ -85,20 +129,38 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
 .rev-rd{font-size:13px;color:#9a9aff;}
 .rev-speak{background:none;border:none;font-size:18px;cursor:pointer;margin-left:auto;}
 .rev-mn{font-size:14px;color:#6af7b8;margin-bottom:6px;}
+.rev-miss{font-size:11px;color:#f76a6a;margin-top:4px;}
+
+/* ── 聽力練習 ── */
 .listen-card{background:linear-gradient(135deg,#1a1a35,#13132a);border:1px solid #2a2a4a;border-radius:20px;margin:0 16px;padding:40px 20px;text-align:center;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .listen-icon{font-size:56px;margin-bottom:12px;}
 .listen-hint{font-size:13px;color:#666;margin-bottom:16px;}
 .play-btn{background:#7c6af7;border:none;color:#fff;border-radius:14px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
-#lreveal{margin-top:16px;}
 .l-jp{font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700;margin-bottom:4px;}
 .l-rd{font-size:15px;color:#9a9aff;letter-spacing:2px;margin-bottom:4px;}
 .l-mn{font-size:16px;color:#6af7b8;}
 .lact{display:none;gap:10px;padding:12px 16px 0;}
 .lplay{display:flex;gap:10px;padding:12px 16px 0;}
+
+/* ★ Toast 提示 */
+.toast{
+  position:fixed;top:18px;left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  background:#f7c46a;color:#1a0f00;
+  padding:9px 22px;border-radius:20px;
+  font-size:13px;font-weight:700;
+  z-index:9999;opacity:0;
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 
+<div class="toast" id="toast"></div>
+
+<!-- ══ 單字練習 ══ -->
 <div class="section active" id="s-vocab">
   <div class="hdr">
     <div class="hdr-title">單字練習</div>
@@ -109,6 +171,8 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
     <button class="mode-tab active" id="vm-flash" onclick="setVMode('flash')">抽認卡</button>
     <button class="mode-tab" id="vm-quiz" onclick="setVMode('quiz')">測驗</button>
   </div>
+
+  <!-- 抽認卡 -->
   <div id="vm-flash-div">
     <div class="stats">
       <div class="stat"><div class="stat-num blue" id="sv-t">0</div><div class="stat-label">進度</div></div>
@@ -137,6 +201,8 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
       <button class="vact-btn ok" onclick="vAns(true)">✅ 記住了</button>
     </div>
   </div>
+
+  <!-- 測驗 -->
   <div id="vm-quiz-div" style="display:none;">
     <div class="stats">
       <div class="stat"><div class="stat-num blue" id="sv-t2">0</div><div class="stat-label">進度</div></div>
@@ -147,6 +213,7 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
   </div>
 </div>
 
+<!-- ══ 假名練習 ══ -->
 <div class="section" id="s-kana">
   <div class="hdr"><div class="hdr-title">假名練習</div></div>
   <div class="mode-tabs">
@@ -186,6 +253,7 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
   <div id="km-meaning-div" style="display:none;"><div class="qbox" id="kquiz-meaning"></div></div>
 </div>
 
+<!-- ══ 聽力練習 ══ -->
 <div class="section" id="s-listen">
   <div class="hdr"><div class="hdr-title">聽力練習</div></div>
   <div class="stats">
@@ -214,6 +282,7 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
   </div>
 </div>
 
+<!-- ══ 複習清單 ══ -->
 <div class="section" id="s-review">
   <div class="hdr"><div class="hdr-title">複習清單</div></div>
   <div class="rtabs">
@@ -227,6 +296,7 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
   </div>
 </div>
 
+<!-- ══ 底部導航 ══ -->
 <nav class="nav">
   <div class="nav-item active" id="n-vocab" onclick="setSection('vocab')"><div class="ni">📚</div>單字</div>
   <div class="nav-item" id="n-kana" onclick="setSection('kana')"><div class="ni">🈳</div>假名</div>
@@ -235,13 +305,20 @@ body{background:#0d0d1a;color:#fff;font-family:'Hiragino Sans','Noto Sans JP','N
 </nav>
 
 <script>
+// ══════════════════════════════════════════
+//  品詞標籤設定
+// ══════════════════════════════════════════
 const TC={
   noun:{l:'名詞',bg:'rgba(106,175,247,0.2)',cl:'#6aaff7'},
   verb:{l:'動詞',bg:'rgba(106,247,184,0.2)',cl:'#6af7b8'},
-  adj:{l:'形容詞',bg:'rgba(247,160,106,0.2)',cl:'#f7a06a'},
-  adv:{l:'副詞',bg:'rgba(247,106,247,0.2)',cl:'#f76af7'},
+  adj: {l:'形容詞',bg:'rgba(247,160,106,0.2)',cl:'#f7a06a'},
+  adv: {l:'副詞',bg:'rgba(247,106,247,0.2)',cl:'#f76af7'},
   expr:{l:'表達',bg:'rgba(247,228,106,0.2)',cl:'#f7e46a'},
 };
+
+// ══════════════════════════════════════════
+//  分組 Tag 設定
+// ══════════════════════════════════════════
 const TAGS=[
   {k:'all',l:'全部'},
   {k:'あ①',l:'あ①1-40'},{k:'あ②',l:'あ②41-100'},
@@ -249,8 +326,12 @@ const TAGS=[
   {k:'さ',l:'さ201-260'},{k:'し',l:'し261-320'},
   {k:'す',l:'す321-370'},{k:'た',l:'た371-420'},
   {k:'な',l:'な421-480'},{k:'は',l:'は481-530'},
-  {k:'ま',l:'ま531-565'},{k:'新',l:'新增566+'},
+  {k:'ま',l:'ま531-565'},{k:'新',l:'新増566+'},
 ];
+
+// ══════════════════════════════════════════
+//  單字資料
+// ══════════════════════════════════════════
 const VOCAB=[
   {jp:'挨拶',rd:'あいさつ',mn:'打招呼',pos:'noun',tag:'あ①',mem:'あいさつ＝相遇時的禮儀',ex:'毎朝、元気に挨拶しましょう。'},
   {jp:'青',rd:'あお',mn:'藍色',pos:'noun',tag:'あ①',mem:'あお→藍天的顏色',ex:'空は青いです。'},
@@ -750,28 +831,26 @@ const VOCAB=[
   {jp:'渡す',rd:'わたす',mn:'遞交',pos:'verb',tag:'ま',mem:'わたす→把東西給對方',ex:'書類を渡します。'},
   {jp:'笑う',rd:'わらう',mn:'笑',pos:'verb',tag:'ま',mem:'わらう→臉上露出笑容',ex:'みんなで笑います。'},
   {jp:'割る',rd:'わる',mn:'打破',pos:'verb',tag:'ま',mem:'わる→讓東西碎掉',ex:'コップを割りました。'},
-  // ── 新增：副詞 ──
+  // ── 新増 ──
   {jp:'かなり',rd:'かなり',mn:'相當',pos:'adv',tag:'新',mem:'かなり→程度比想像高',ex:'この本はかなり面白いです。'},
-  {jp:'けっこう',rd:'けっこう',mn:'頗為・蠻',pos:'adv',tag:'新',mem:'けっこう→還不錯、蠻好的',ex:'このレストランはけっこう美味しいです。'},
-  {jp:'ずいぶん',rd:'ずいぶん',mn:'非常（超乎預期）',pos:'adv',tag:'新',mem:'ずいぶん→比預想還要更多',ex:'今日はずいぶん寒いですね。'},
-  {jp:'たしかに',rd:'たしかに',mn:'的確・確實',pos:'adv',tag:'新',mem:'たしかに→沒錯，的確如此',ex:'彼の言うことはたしかに正しいです。'},
+  {jp:'けっこう',rd:'けっこう',mn:'頗為',pos:'adv',tag:'新',mem:'けっこう→還不錯、蠻好的',ex:'このレストランはけっこう美味しいです。'},
+  {jp:'ずいぶん',rd:'ずいぶん',mn:'非常',pos:'adv',tag:'新',mem:'ずいぶん→比預想還要更多',ex:'今日はずいぶん寒いですね。'},
+  {jp:'たしかに',rd:'たしかに',mn:'確實',pos:'adv',tag:'新',mem:'たしかに→的確如此',ex:'彼の言うことはたしかに正しいです。'},
   {jp:'たいてい',rd:'たいてい',mn:'大多時候',pos:'adv',tag:'新',mem:'たいてい→大部分的情況',ex:'日曜日はたいてい家にいます。'},
   {jp:'ほとんど',rd:'ほとんど',mn:'幾乎',pos:'adv',tag:'新',mem:'ほとんど→差不多全部',ex:'宿題はほとんど終わりました。'},
   {jp:'このごろ',rd:'このごろ',mn:'近來',pos:'adv',tag:'新',mem:'このごろ＝最近這段時間',ex:'このごろ、よく雨が降ります。'},
   {jp:'まず',rd:'まず',mn:'首先',pos:'adv',tag:'新',mem:'まず＝第一步先做的事',ex:'まず、手を洗ってください。'},
-  {jp:'しっかり',rd:'しっかり',mn:'確實・穩固',pos:'adv',tag:'新',mem:'しっかり→紮實、確實地',ex:'ドアをしっかり閉めてください。'},
-  {jp:'はっきり',rd:'はっきり',mn:'清楚・明確',pos:'adv',tag:'新',mem:'はっきり→清晰、明確地說',ex:'もっとはっきり言ってください。'},
+  {jp:'しっかり',rd:'しっかり',mn:'確實',pos:'adv',tag:'新',mem:'しっかり→紮實、確實地',ex:'ドアをしっかり閉めてください。'},
+  {jp:'はっきり',rd:'はっきり',mn:'清楚',pos:'adv',tag:'新',mem:'はっきり→清晰、明確地說',ex:'もっとはっきり言ってください。'},
   {jp:'もちろん',rd:'もちろん',mn:'當然',pos:'adv',tag:'新',mem:'もちろん＝理所當然',ex:'明日のパーティー、もちろん行きますよ。'},
   {jp:'なるべく',rd:'なるべく',mn:'盡可能',pos:'adv',tag:'新',mem:'なるべく＝能做到的範圍內',ex:'なるべく早く来てください。'},
-  {jp:'ちゃんと',rd:'ちゃんと',mn:'好好地・確實地',pos:'adv',tag:'新',mem:'ちゃんと→認真做好',ex:'毎日ちゃんと野菜を食べていますか。'},
-  // ── 新增：い形容詞 ──
+  {jp:'ちゃんと',rd:'ちゃんと',mn:'好好地',pos:'adv',tag:'新',mem:'ちゃんと→認真做好',ex:'毎日ちゃんと野菜を食べていますか。'},
   {jp:'うれしい',rd:'うれしい',mn:'高興的',pos:'adj',tag:'新',mem:'うれしい→心裡很開心',ex:'うれしい知らせがありました。'},
   {jp:'かなしい',rd:'かなしい',mn:'悲傷的',pos:'adj',tag:'新',mem:'かなしい→心裡很難過',ex:'かなしい映画を見ました。'},
   {jp:'すばらしい',rd:'すばらしい',mn:'很棒的',pos:'adj',tag:'新',mem:'すばらしい→令人讚嘆',ex:'すばらしい景色ですね。'},
   {jp:'詳しい',rd:'くわしい',mn:'詳細的',pos:'adj',tag:'新',mem:'くわしい→說明很仔細',ex:'詳しい説明をします。'},
   {jp:'優しい',rd:'やさしい',mn:'溫柔的',pos:'adj',tag:'新',mem:'やさしい→對人親切溫和',ex:'優しい人が好きです。'},
   {jp:'細い',rd:'ほそい',mn:'細的',pos:'adj',tag:'新',mem:'ほそい→直徑小或很瘦',ex:'細い糸を使います。'},
-  // ── 新增：な形容詞 ──
   {jp:'急な',rd:'きゅうな',mn:'突然的',pos:'adj',tag:'新',mem:'急な用事＝突然的急事',ex:'急な用事ができました。'},
   {jp:'自由',rd:'じゆう',mn:'自由的',pos:'adj',tag:'新',mem:'自由な時間＝自由的時間',ex:'自由な時間があります。'},
   {jp:'安全',rd:'あんぜん',mn:'安全的',pos:'adj',tag:'新',mem:'安全な場所＝安全的地方',ex:'安全な場所です。'},
@@ -780,6 +859,9 @@ const VOCAB=[
   {jp:'盛ん',rd:'さかん',mn:'盛行的',pos:'adj',tag:'新',mem:'盛んなスポーツ＝盛行的運動',ex:'盛んなスポーツです。'},
 ];
 
+// ══════════════════════════════════════════
+//  工具函式
+// ══════════════════════════════════════════
 function sh(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function $(id){return document.getElementById(id);}
 function tagH(w){const t=TC[w.pos]||{l:'其他',bg:'rgba(170,170,170,0.15)',cl:'#aaa'};return`<span class="c-tag" style="background:${t.bg};color:${t.cl}">${t.l}</span>`;}
@@ -788,16 +870,25 @@ function speak(text){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='ja-JP';u.rate=0.85;u.pitch=1;
-  const voices=window.speechSynthesis.getVoices();
-  const jp=voices.find(v=>v.lang.startsWith('ja'));
+  const jp=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('ja'));
   if(jp)u.voice=jp;
   window.speechSynthesis.speak(u);
 }
 
+// ★ Toast 提示
+function showToast(msg){
+  const t=$('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  狀態
+// ══════════════════════════════════════════
 let section='vocab',activeTag='all',vMode='flash';
 let pool=[...VOCAB],vi=0,vFlipped=false;
 let vKnown=new Set(),vForgot=new Set(),vHistory=[];
-let vMissCount={}; // 記錄每個單字不熟次數
+let vMissCount={};  // ★ 不熟次數
 let qPool=[],qi=0,qAnswered=false;
 let kPool=[],ki=0,kFlipped=false;
 let kKnown=new Set(),kForgot=new Set(),kHistory=[];
@@ -807,10 +898,44 @@ let lPool=[],li=0,lHistory=[];
 let lKnown=new Set(),lForgot=new Set();
 let rTab='vocab';
 
-function save(){try{localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));localStorage.setItem('n4_vF',JSON.stringify([...vForgot]));localStorage.setItem('n4_mc',JSON.stringify(vMissCount));localStorage.setItem('n4_kK',JSON.stringify([...kKnown]));localStorage.setItem('n4_kF',JSON.stringify([...kForgot]));localStorage.setItem('n4_lK',JSON.stringify([...lKnown]));localStorage.setItem('n4_lF',JSON.stringify([...lForgot]));}catch(e){}}
-function load(){try{const vk=localStorage.getItem('n4_vK');if(vk)vKnown=new Set(JSON.parse(vk));const vf=localStorage.getItem('n4_vF');if(vf)vForgot=new Set(JSON.parse(vf));const mc=localStorage.getItem('n4_mc');if(mc)vMissCount=JSON.parse(mc);const kk=localStorage.getItem('n4_kK');if(kk)kKnown=new Set(JSON.parse(kk));const kf=localStorage.getItem('n4_kF');if(kf)kForgot=new Set(JSON.parse(kf));const lk=localStorage.getItem('n4_lK');if(lk)lKnown=new Set(JSON.parse(lk));const lf=localStorage.getItem('n4_lF');if(lf)lForgot=new Set(JSON.parse(lf));}catch(e){}}
-function resetAll(){if(!confirm('確定要重置所有進度嗎？'))return;[vKnown,vForgot,kKnown,kForgot,lKnown,lForgot].forEach(s=>s.clear());vHistory=[];kHistory=[];lHistory=[];vi=0;ki=0;li=0;try{localStorage.clear();}catch(e){}updateVStats();updateKStats();updateLStats();renderCard();renderKanaCard();}
+// ══════════════════════════════════════════
+//  localStorage
+// ══════════════════════════════════════════
+function save(){
+  try{
+    localStorage.setItem('n4_vK',JSON.stringify([...vKnown]));
+    localStorage.setItem('n4_vF',JSON.stringify([...vForgot]));
+    localStorage.setItem('n4_mc',JSON.stringify(vMissCount));
+    localStorage.setItem('n4_kK',JSON.stringify([...kKnown]));
+    localStorage.setItem('n4_kF',JSON.stringify([...kForgot]));
+    localStorage.setItem('n4_lK',JSON.stringify([...lKnown]));
+    localStorage.setItem('n4_lF',JSON.stringify([...lForgot]));
+  }catch(e){}
+}
+function load(){
+  try{
+    const vk=localStorage.getItem('n4_vK');if(vk)vKnown=new Set(JSON.parse(vk));
+    const vf=localStorage.getItem('n4_vF');if(vf)vForgot=new Set(JSON.parse(vf));
+    const mc=localStorage.getItem('n4_mc');if(mc)vMissCount=JSON.parse(mc);
+    const kk=localStorage.getItem('n4_kK');if(kk)kKnown=new Set(JSON.parse(kk));
+    const kf=localStorage.getItem('n4_kF');if(kf)kForgot=new Set(JSON.parse(kf));
+    const lk=localStorage.getItem('n4_lK');if(lk)lKnown=new Set(JSON.parse(lk));
+    const lf=localStorage.getItem('n4_lF');if(lf)lForgot=new Set(JSON.parse(lf));
+  }catch(e){}
+}
+function resetAll(){
+  if(!confirm('確定要重置所有進度嗎？'))return;
+  [vKnown,vForgot,kKnown,kForgot,lKnown,lForgot].forEach(s=>s.clear());
+  vHistory=[];kHistory=[];lHistory=[];vi=0;ki=0;li=0;vMissCount={};
+  try{localStorage.clear();}catch(e){}
+  updateVStats();updateKStats();updateLStats();
+  renderCard();renderKanaCard();
+  showToast('✓ 已重置所有進度');
+}
 
+// ══════════════════════════════════════════
+//  導航
+// ══════════════════════════════════════════
 function setSection(s){
   section=s;
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
@@ -821,114 +946,296 @@ function setSection(s){
   if(s==='kana'){buildKPool();renderKanaCard();}
 }
 
-function buildPool(){pool=activeTag==='all'?[...VOCAB]:VOCAB.filter(w=>w.tag===activeTag);vi=0;vFlipped=false;vHistory=[];$('vocab-count').textContent=pool.length+' 個';updateVStats();}
-function renderFTags(){$('ftags').innerHTML=TAGS.map(t=>{const cnt=t.k==='all'?VOCAB.length:VOCAB.filter(w=>w.tag===t.k).length;return`<button class="ftag ${activeTag===t.k?'on':''}" onclick="setTag('${t.k}')">${t.l}(${cnt})</button>`;}).join('');}
-function setTag(t){activeTag=t;buildPool();renderFTags();vKnown.clear();vForgot.clear();if(vMode==='flash')renderCard();else{qPool=sh([...pool]);qi=0;renderQCard();}lPool=sh([...pool]);li=0;}
-
+// ══════════════════════════════════════════
+//  單字 – 抽認卡
+// ══════════════════════════════════════════
+function buildPool(){
+  pool=activeTag==='all'?[...VOCAB]:VOCAB.filter(w=>w.tag===activeTag);
+  vi=0;vFlipped=false;vHistory=[];
+  $('vocab-count').textContent=pool.length+' 個';
+  updateVStats();
+}
+function renderFTags(){
+  $('ftags').innerHTML=TAGS.map(t=>{
+    const cnt=t.k==='all'?VOCAB.length:VOCAB.filter(w=>w.tag===t.k).length;
+    return`<button class="ftag ${activeTag===t.k?'on':''}" onclick="setTag('${t.k}')">${t.l}(${cnt})</button>`;
+  }).join('');
+}
+function setTag(t){
+  activeTag=t;buildPool();renderFTags();
+  vKnown.clear();vForgot.clear();
+  if(vMode==='flash')renderCard();
+  else{qPool=sh([...pool]);qi=0;renderQCard();}
+  lPool=sh([...pool]);li=0;
+}
 function setVMode(m){
   vMode=m;
-  ['flash','quiz'].forEach(x=>{$('vm-'+x+'-div').style.display=x===m?'block':'none';$('vm-'+x).classList.toggle('active',x===m);});
+  ['flash','quiz'].forEach(x=>{
+    $('vm-'+x+'-div').style.display=x===m?'block':'none';
+    $('vm-'+x).classList.toggle('active',x===m);
+  });
   if(m==='flash'){vi=0;vFlipped=false;vKnown.clear();vForgot.clear();vHistory=[];updateVStats();renderCard();}
   else{qPool=sh([...pool]);qi=0;qAnswered=false;renderQCard();}
+}
+
+// ★ 渲染不熟次數點點
+function missDotsHTML(rd){
+  const c=Math.min(vMissCount[rd]||0,5);
+  if(c===0)return'';
+  let dots='';
+  for(let i=0;i<5;i++) dots+=`<div class="miss-dot ${i<c?'filled':''}"></div>`;
+  return`<div class="miss-tracker">${dots}<span class="miss-count">${c}/5${c>=5?' ⭐':''}</span></div>`;
 }
 
 function renderCard(){
   if($('v-prev'))$('v-prev').style.opacity=vi===0?'0.3':'1';
   if(vi>=pool.length){
-    $('cfront').innerHTML=`<div class="c-jp" style="font-size:48px">🎉</div><div class="c-rd">這批全部完成！</div><div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:0.5rem">去「複習清單」看需要加強的</div>`;
-    $('cback').innerHTML='';$('vact').style.display='none';$('vflip').style.display='none';$('vhint').style.display='none';$('vcnt').textContent=`${pool.length} / ${pool.length}`;return;
+    $('cfront').innerHTML=`<div style="font-size:48px">🎉</div><div style="color:rgba(255,255,255,0.5);margin-top:0.5rem">這批全部完成！</div><div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:0.3rem">去「複習清單」看需要加強的</div>`;
+    $('cback').innerHTML='';$('vact').style.display='none';$('vflip').style.display='none';$('vhint').style.display='none';
+    $('vcnt').textContent=`${pool.length} / ${pool.length}`;return;
   }
-  const w=pool[vi];vFlipped=false;$('ci').classList.remove('flipped');
+  const w=pool[vi];
+
+  // ★ Gemini 優化：切換新卡時瞬間翻回正面，不顯示背面動畫
+  const card=$('ci');
+  vFlipped=false;
+  card.classList.add('no-transition');
+  card.classList.remove('flipped');
+  setTimeout(()=>card.classList.remove('no-transition'),20);
+
   $('vact').style.display='none';$('vflip').style.display='flex';$('vhint').style.display='block';
   $('vcnt').textContent=`${vi+1} / ${pool.length}`;
-  $('cfront').innerHTML=`${tagH(w)}<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div><div class="c-jp" style="font-size:36px;letter-spacing:4px">${w.rd}</div>${vMissCount[w.rd]?`<div style="font-size:12px;color:#f76a6a;margin-top:8px">${w.star?'⭐':''}不熟 ×${vMissCount[w.rd]}</div>`:''}<div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:0.5rem">點擊翻面確認漢字</div>`;
-  $('cback').innerHTML=`${tagH(w)}<div class="c-jp" style="font-size:28px">${w.jp}</div><div class="c-rd">${w.rd}</div><div class="c-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div><div class="ex-text">例：${w.ex}</div>`;
+
+  $('cfront').innerHTML=`
+    ${tagH(w)}
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:0.5rem">這個讀音是哪個漢字？</div>
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:36px;font-weight:700;letter-spacing:4px;text-align:center">${w.rd}</div>
+    ${missDotsHTML(w.rd)}
+    <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:0.5rem">點擊翻面確認漢字</div>`;
+
+  $('cback').innerHTML=`
+    ${tagH(w)}
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700;text-align:center">${w.jp}</div>
+    <div class="c-rd">${w.rd}</div>
+    <div class="c-mn">${w.mn}</div>
+    <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    <div class="ex-text">例：${w.ex}</div>`;
 }
+
 function flipCard(){
   const card=$('ci');
-  card.classList.add('flipping');
   vFlipped=!vFlipped;
   card.classList.toggle('flipped',vFlipped);
-  setTimeout(()=>card.classList.remove('flipping'),500);
   if(vFlipped){$('vact').style.display='flex';$('vflip').style.display='none';$('vhint').style.display='none';}
 }
+
 function vAns(ok){
   vHistory.push({idx:vi,ok});
-  if(ok){vKnown.add(vi);}
-  else{
+  if(ok){
+    vKnown.add(vi);
+    vForgot.delete(vi);
+  } else {
     vForgot.add(vi);
+    vKnown.delete(vi);
     const key=pool[vi].rd;
     vMissCount[key]=(vMissCount[key]||0)+1;
-    if(vMissCount[key]>=5){
+    // ★ 不熟5次 → 自動加星號
+    if(vMissCount[key]===5){
       pool[vi].star=true;
-      // 顯示提示
-      const tip=document.createElement('div');
-      tip.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#f7c46a;color:#000;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;';
-      tip.textContent='⭐ 已加入星號重點單字！';
-      document.body.appendChild(tip);
-      setTimeout(()=>tip.remove(),2000);
+      showToast('⭐ 不熟5次！已加入重點複習！');
     }
   }
   vi++;updateVStats();save();renderCard();
 }
-function vPrev(){if(vi===0)return;const last=vHistory.pop();if(last){if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);}vi--;vFlipped=false;updateVStats();renderCard();}
-function updateVStats(){const t=vKnown.size+vForgot.size;$('sv-t').textContent=t;$('sv-k').textContent=vKnown.size;$('sv-f').textContent=vForgot.size;$('vp').style.width=Math.round((t/Math.max(pool.length,1))*100)+'%';}
+
+function vPrev(){
+  if(vi===0)return;
+  const last=vHistory.pop();
+  if(last){if(last.ok)vKnown.delete(last.idx);else vForgot.delete(last.idx);}
+  vi--;vFlipped=false;updateVStats();renderCard();
+}
+
+function updateVStats(){
+  const t=vKnown.size+vForgot.size;
+  $('sv-t').textContent=t;$('sv-k').textContent=vKnown.size;$('sv-f').textContent=vForgot.size;
+  $('vp').style.width=Math.round((t/Math.max(pool.length,1))*100)+'%';
+}
 function speakCurrent(){if(vi<pool.length)speak(pool[vi].rd);}
 
+// ══════════════════════════════════════════
+//  單字 – 測驗
+// ══════════════════════════════════════════
 function renderQCard(){
-  if(qi>=qPool.length){$('qbox').innerHTML=`<div class="empty-state">🎊 完成！答對 ${vKnown.size}/${qPool.length}</div><button class="next-btn" onclick="qPool=sh([...pool]);qi=0;vKnown.clear();vForgot.clear();renderQCard()">再做一次</button>`;return;}
-  const w=qPool[qi];const others=pool.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);qAnswered=false;
-  $('qbox').innerHTML=`<div class="q-word">${w.jp}</div><div class="q-sub">${w.rd} の意思は？</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkVQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}'">${o.mn}</button>`).join('')}</div><div id="qr"></div><button class="next-btn" id="qn" style="display:none" onclick="qi++;renderQCard()">下一題 →</button>`;
+  if(qi>=qPool.length){
+    $('qbox').innerHTML=`<div class="empty-state">🎊 完成！答對 ${vKnown.size}/${qPool.length}</div>
+    <button class="next-btn" onclick="qPool=sh([...pool]);qi=0;vKnown.clear();vForgot.clear();renderQCard()">再做一次</button>`;
+    return;
+  }
+  const w=qPool[qi];
+  const others=pool.filter(v=>v.jp!==w.jp);sh(others);
+  const opts=sh([w,...others.slice(0,3)]);
+  qAnswered=false;
+  $('qbox').innerHTML=`
+    <div class="q-word">${w.jp}</div>
+    <div class="q-sub">${w.rd} の意思は？</div>
+    <div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkVQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}')">${o.mn}</button>`).join('')}</div>
+    <div id="qr"></div>
+    <button class="next-btn" id="qn" style="display:none" onclick="qi++;renderQCard()">下一題 →</button>`;
 }
-function checkVQ(el,ch,co){if(qAnswered)return;qAnswered=true;const w=qPool[qi];document.querySelectorAll('#qbox .q-opt').forEach(b=>b.disabled=true);if(ch===co){el.classList.add('ok');vKnown.add(qi);$('qr').innerHTML=`<div class="q-res ok">✅ 正確！${w.mem}</div>`;}else{el.classList.add('ng');vForgot.add(qi);document.querySelectorAll('#qbox .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('qr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}<br>${w.mem}</div>`;}$('qn').style.display='block';updateVStats();save();}
+function checkVQ(el,ch,co){
+  if(qAnswered)return;qAnswered=true;
+  const w=qPool[qi];
+  document.querySelectorAll('#qbox .q-opt').forEach(b=>b.disabled=true);
+  if(ch===co){
+    el.classList.add('ok');vKnown.add(qi);
+    $('qr').innerHTML=`<div class="q-res ok">✅ 正確！${w.mem}</div>`;
+  } else {
+    el.classList.add('ng');vForgot.add(qi);
+    document.querySelectorAll('#qbox .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});
+    $('qr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}<br>${w.mem}</div>`;
+  }
+  $('qn').style.display='block';updateVStats();save();
+}
 
+// ══════════════════════════════════════════
+//  假名練習
+// ══════════════════════════════════════════
 function buildKPool(){kPool=sh([...VOCAB]);ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();}
-function setKMode(m){['flash','kanji','meaning'].forEach(x=>{$('km-'+x+'-div').style.display=x===m?'block':'none';$('km-'+x).classList.toggle('active',x===m);});if(m==='flash'){ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();renderKanaCard();}if(m==='kanji'){kkPool=sh([...VOCAB]);kki=0;kkAnswered=false;renderKanjiQuiz();}if(m==='meaning'){kmPool=sh([...VOCAB]);kmi=0;kmAnswered=false;renderMeaningQuiz();}}
+function setKMode(m){
+  ['flash','kanji','meaning'].forEach(x=>{
+    $('km-'+x+'-div').style.display=x===m?'block':'none';
+    $('km-'+x).classList.toggle('active',x===m);
+  });
+  if(m==='flash'){ki=0;kFlipped=false;kHistory=[];kKnown.clear();kForgot.clear();updateKStats();renderKanaCard();}
+  if(m==='kanji'){kkPool=sh([...VOCAB]);kki=0;kkAnswered=false;renderKanjiQuiz();}
+  if(m==='meaning'){kmPool=sh([...VOCAB]);kmi=0;kmAnswered=false;renderMeaningQuiz();}
+}
 function renderKanaCard(){
-  if(ki>=kPool.length){$('kfront').innerHTML=`<div class="c-jp" style="font-size:48px">🎉</div><div class="c-rd">全部完成！</div>`;$('kback').innerHTML='';$('kact').style.display='none';$('kflip').style.display='none';$('khint').style.display='none';$('kcnt').textContent=`${kPool.length}/${kPool.length}`;return;}
-  const w=kPool[ki];kFlipped=false;$('kci').classList.remove('flipped');$('kact').style.display='none';$('kflip').style.display='flex';$('khint').style.display='block';$('kcnt').textContent=`${ki+1} / ${kPool.length}`;
-  $('kfront').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:0.5rem">這個讀音對應哪個漢字？</div><div class="c-jp" style="font-size:40px;letter-spacing:4px">${w.rd}</div><div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
-  $('kback').innerHTML=`${tagH(w)}<div class="c-jp" style="font-size:28px">${w.jp}</div><div class="c-rd">${w.rd}</div><div class="c-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div><div class="ex-text">例：${w.ex}</div>`;
+  if(ki>=kPool.length){
+    $('kfront').innerHTML=`<div style="font-size:48px">🎉</div><div style="color:rgba(255,255,255,0.5)">全部完成！</div>`;
+    $('kback').innerHTML='';$('kact').style.display='none';$('kflip').style.display='none';$('khint').style.display='none';
+    $('kcnt').textContent=`${kPool.length}/${kPool.length}`;return;
+  }
+  const w=kPool[ki];
+
+  // ★ Gemini 優化：瞬間復位
+  const kcard=$('kci');
+  kFlipped=false;
+  kcard.classList.add('no-transition');
+  kcard.classList.remove('flipped');
+  setTimeout(()=>kcard.classList.remove('no-transition'),20);
+
+  $('kact').style.display='none';$('kflip').style.display='flex';$('khint').style.display='block';
+  $('kcnt').textContent=`${ki+1} / ${kPool.length}`;
+  $('kfront').innerHTML=`
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:0.5rem">這個讀音對應哪個漢字？</div>
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:40px;font-weight:700;letter-spacing:4px">${w.rd}</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:1rem">點擊翻面確認漢字</div>`;
+  $('kback').innerHTML=`
+    ${tagH(w)}
+    <div style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif;font-size:28px;font-weight:700">${w.jp}</div>
+    <div class="c-rd">${w.rd}</div>
+    <div class="c-mn">${w.mn}</div>
+    <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    <div class="ex-text">例：${w.ex}</div>`;
 }
 function flipKana(){
-  const card=$('kci');
-  card.classList.add('flipping');
+  const kcard=$('kci');
   kFlipped=!kFlipped;
-  card.classList.toggle('flipped',kFlipped);
-  setTimeout(()=>card.classList.remove('flipping'),500);
+  kcard.classList.toggle('flipped',kFlipped);
   if(kFlipped){$('kact').style.display='flex';$('kflip').style.display='none';$('khint').style.display='none';}
 }
 function kAns(ok){kHistory.push({idx:ki,ok});if(ok)kKnown.add(ki);else kForgot.add(ki);ki++;updateKStats();save();renderKanaCard();}
 function kPrev(){if(ki===0)return;const last=kHistory.pop();if(last){if(last.ok)kKnown.delete(last.idx);else kForgot.delete(last.idx);}ki--;kFlipped=false;updateKStats();renderKanaCard();}
 function updateKStats(){const t=kKnown.size+kForgot.size;$('sk-t').textContent=t;$('sk-k').textContent=kKnown.size;$('sk-f').textContent=kForgot.size;$('kp').style.width=Math.round((t/Math.max(kPool.length,1))*100)+'%';}
 function speakKana(){if(ki<kPool.length)speak(kPool[ki].rd);}
-function renderKanjiQuiz(){if(kki>=kkPool.length){$('kquiz-kanji').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kkPool.length}</div><button class="next-btn" onclick="kkPool=sh([...VOCAB]);kki=0;kKnown.clear();kForgot.clear();renderKanjiQuiz()">再做一次</button>`;return;}const w=kkPool[kki];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kkAnswered=false;$('kquiz-kanji').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名對應哪個漢字？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub">${w.mn}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKKQ(this,'${o.jp.replace(/'/g,"\\'")}','${w.jp.replace(/'/g,"\\'")}'">${o.jp}</button>`).join('')}</div><div id="kkr"></div><button class="next-btn" id="kkn" style="display:none" onclick="kki++;renderKanjiQuiz()">下一題 →</button>`;}
+
+function renderKanjiQuiz(){
+  if(kki>=kkPool.length){$('kquiz-kanji').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kkPool.length}</div><button class="next-btn" onclick="kkPool=sh([...VOCAB]);kki=0;kKnown.clear();kForgot.clear();renderKanjiQuiz()">再做一次</button>`;return;}
+  const w=kkPool[kki];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kkAnswered=false;
+  $('kquiz-kanji').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名對應哪個漢字？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub">${w.mn}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKKQ(this,'${o.jp.replace(/'/g,"\\'")}','${w.jp.replace(/'/g,"\\'")}')">${o.jp}</button>`).join('')}</div><div id="kkr"></div><button class="next-btn" id="kkn" style="display:none" onclick="kki++;renderKanjiQuiz()">下一題 →</button>`;
+}
 function checkKKQ(el,ch,co){if(kkAnswered)return;kkAnswered=true;const w=kkPool[kki];document.querySelectorAll('#kquiz-kanji .q-opt').forEach(b=>b.disabled=true);if(ch===co){el.classList.add('ok');kKnown.add(kki);$('kkr').innerHTML=`<div class="q-res ok">✅ 正確！${w.rd}=${w.jp}（${w.mn}）</div>`;}else{el.classList.add('ng');kForgot.add(kki);document.querySelectorAll('#kquiz-kanji .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kkr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}（${w.mn}）</div>`;}$('kkn').style.display='block';updateKStats();save();}
-function renderMeaningQuiz(){if(kmi>=kmPool.length){$('kquiz-meaning').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kmPool.length}</div><button class="next-btn" onclick="kmPool=sh([...VOCAB]);kmi=0;kKnown.clear();kForgot.clear();renderMeaningQuiz()">再做一次</button>`;return;}const w=kmPool[kmi];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kmAnswered=false;$('kquiz-meaning').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名是什麼意思？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub" style="color:rgba(255,255,255,0.4)">${w.jp}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKMQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}'">${o.mn}</button>`).join('')}</div><div id="kmr"></div><button class="next-btn" id="kmn" style="display:none" onclick="kmi++;renderMeaningQuiz()">下一題 →</button>`;}
+
+function renderMeaningQuiz(){
+  if(kmi>=kmPool.length){$('kquiz-meaning').innerHTML=`<div class="empty-state">🎊 完成！答對 ${kKnown.size}/${kmPool.length}</div><button class="next-btn" onclick="kmPool=sh([...VOCAB]);kmi=0;kKnown.clear();kForgot.clear();renderMeaningQuiz()">再做一次</button>`;return;}
+  const w=kmPool[kmi];const others=VOCAB.filter(v=>v.jp!==w.jp);sh(others);const opts=sh([w,...others.slice(0,3)]);kmAnswered=false;
+  $('kquiz-meaning').innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:0.5rem">這個平假名是什麼意思？</div><div class="q-word" style="font-size:32px;letter-spacing:4px">${w.rd}</div><div class="q-sub" style="color:rgba(255,255,255,0.4)">${w.jp}</div><div class="q-opts">${opts.map(o=>`<button class="q-opt" onclick="checkKMQ(this,'${o.mn.replace(/'/g,"\\'")}','${w.mn.replace(/'/g,"\\'")}')">${o.mn}</button>`).join('')}</div><div id="kmr"></div><button class="next-btn" id="kmn" style="display:none" onclick="kmi++;renderMeaningQuiz()">下一題 →</button>`;
+}
 function checkKMQ(el,ch,co){if(kmAnswered)return;kmAnswered=true;const w=kmPool[kmi];document.querySelectorAll('#kquiz-meaning .q-opt').forEach(b=>b.disabled=true);if(ch===co){el.classList.add('ok');kKnown.add(kmi);$('kmr').innerHTML=`<div class="q-res ok">✅ 正確！${w.rd}=${w.jp}（${w.mn}）</div>`;}else{el.classList.add('ng');kForgot.add(kmi);document.querySelectorAll('#kquiz-meaning .q-opt').forEach(b=>{if(b.textContent===co)b.classList.add('ok');});$('kmr').innerHTML=`<div class="q-res ng">❌ 答錯。正確：${co}</div>`;}$('kmn').style.display='block';updateKStats();save();}
 
+// ══════════════════════════════════════════
+//  聽力練習
+// ══════════════════════════════════════════
 function renderListen(){
-  if(li>=lPool.length){$('lcard').innerHTML=`<div class="listen-icon">🎊</div><p class="listen-hint">答對 ${lKnown.size}/${lPool.length}</p><button class="play-btn" onclick="li=0;lKnown.clear();lForgot.clear();lHistory=[];lPool=sh([...pool]);renderListen()">再來一次</button>`;$('lact').style.display='none';$('lplay').style.display='none';return;}
+  if(li>=lPool.length){
+    $('lcard').innerHTML=`<div class="listen-icon">🎊</div><p class="listen-hint">答對 ${lKnown.size}/${lPool.length}</p><button class="play-btn" onclick="li=0;lKnown.clear();lForgot.clear();lHistory=[];lPool=sh([...pool]);renderListen()">再來一次</button>`;
+    $('lact').style.display='none';$('lplay').style.display='none';return;
+  }
   $('lnum').textContent=`${li+1} / ${lPool.length}`;
   $('lreveal').style.display='none';$('lact').style.display='none';$('lplay').style.display='flex';
   updateLStats();
 }
 function playListen(){if(li<lPool.length)speak(lPool[li].rd);}
-function showListen(){const w=lPool[li];$('lreveal').style.display='block';$('lreveal').innerHTML=`<div class="l-jp">${w.jp}</div><div class="l-rd">${w.rd}</div><div class="l-mn">${w.mn}</div>`;$('lact').style.display='flex';$('lplay').style.display='none';}
+function showListen(){
+  const w=lPool[li];
+  $('lreveal').style.display='block';
+  $('lreveal').innerHTML=`<div class="l-jp">${w.jp}</div><div class="l-rd">${w.rd}</div><div class="l-mn">${w.mn}</div>`;
+  $('lact').style.display='flex';$('lplay').style.display='none';
+}
 function lAns(ok){lHistory.push({idx:li,ok});if(ok)lKnown.add(li);else lForgot.add(li);li++;updateLStats();save();renderListen();}
 function lPrev(){if(li===0)return;const last=lHistory.pop();if(last){if(last.ok)lKnown.delete(last.idx);else lForgot.delete(last.idx);}li--;updateLStats();renderListen();}
 function updateLStats(){const t=lKnown.size+lForgot.size;$('sl-t').textContent=t;$('sl-k').textContent=lKnown.size;$('sl-f').textContent=lForgot.size;$('lp').style.width=Math.round((t/Math.max(lPool.length,1))*100)+'%';}
 
-function setRTab(t){rTab=t;['vocab','kana'].forEach(x=>{$('rv-'+x).style.display=x===t?'block':'none';$('rt-'+x).classList.toggle('active',x===t);});}
+// ══════════════════════════════════════════
+//  複習清單（含不熟次數顯示）
+// ══════════════════════════════════════════
+function setRTab(t){
+  rTab=t;
+  ['vocab','kana'].forEach(x=>{$('rv-'+x).style.display=x===t?'block':'none';$('rt-'+x).classList.toggle('active',x===t);});
+}
 function renderReview(){
+  // 單字複習：包含所有被標「不熟」的 + 星號單字
   const vlist=[...vForgot].map(i=>pool[i]).filter(Boolean);
-  $('rv-vocab').innerHTML=vlist.length===0?`<div class="empty-state">🎉 沒有需要複習的單字！</div>`:vlist.map(w=>`<div class="rev-item"><div class="rev-row">${tagH(w)}<span class="rev-jp">${w.jp}</span><span class="rev-rd">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div><div class="rev-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div></div>`).join('');
+  const starList=VOCAB.filter(w=>w.star&&!vlist.includes(w));
+  const combined=[...vlist,...starList];
+
+  $('rv-vocab').innerHTML=combined.length===0
+    ?`<div class="empty-state">🎉 沒有需要複習的單字！</div>`
+    :combined.map(w=>{
+      const mc=vMissCount[w.rd]||0;
+      return`<div class="rev-item">
+        <div class="rev-row">${tagH(w)}<span class="rev-jp">${w.jp}</span><span class="rev-rd">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div>
+        <div class="rev-mn">${w.mn}</div>
+        ${mc>0?`<div class="rev-miss">${'●'.repeat(Math.min(mc,5))} 不熟 ${mc} 次${w.star?' ⭐':''}</div>`:''}
+        <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+      </div>`;
+    }).join('');
+
   const klist=[...kForgot].map(i=>kPool[i]).filter(Boolean);
-  $('rv-kana').innerHTML=klist.length===0?`<div class="empty-state">🎉 沒有需要複習的假名！</div>`:klist.map(w=>`<div class="rev-item"><div class="rev-row"><span class="rev-jp" style="font-size:20px;letter-spacing:2px">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div><div style="font-size:17px;font-weight:700;margin-bottom:4px;">${w.jp}</div><div class="rev-mn">${w.mn}</div><div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div></div>`).join('');
+  $('rv-kana').innerHTML=klist.length===0
+    ?`<div class="empty-state">🎉 沒有需要複習的假名！</div>`
+    :klist.map(w=>`<div class="rev-item">
+      <div class="rev-row"><span class="rev-jp" style="font-size:20px;letter-spacing:2px">${w.rd}</span><button class="rev-speak" onclick="speak('${w.rd}')">🔊</button></div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:4px">${w.jp}</div>
+      <div class="rev-mn">${w.mn}</div>
+      <div class="mem-box"><div class="mem-label">記憶技巧</div><div class="mem-text">${w.mem}</div></div>
+    </div>`).join('');
 }
 
-load();renderFTags();buildPool();renderCard();buildKPool();lPool=sh([...VOCAB]);
-if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=()=>{};}
+// ══════════════════════════════════════════
+//  初始化
+// ══════════════════════════════════════════
+load();
+renderFTags();
+buildPool();
+renderCard();
+buildKPool();
+lPool=sh([...VOCAB]);
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>{};
+}
 </script>
 </body>
 </html>
